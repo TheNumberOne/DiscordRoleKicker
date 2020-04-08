@@ -2,7 +2,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.71'
 }
 
-group 'org.example'
+group 'io.github.thenumberone.discord.rolekickerbot'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -11,6 +11,8 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "com.discord4j:discord4j-core:3.0.14"
+    implementation "org.springframework:spring-core:5.2.5.RELEASE"
 }
 
 compileKotlin {
