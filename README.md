@@ -1,5 +1,7 @@
 # Discord Role Kicker Bot
 
+(Note that this bot hasn't been implemented yet and is currently in the development process.)
+
 ## Basic Functionality
  - User is assigned a role that the bot listens to.
  - After `<X>` time, the user is warned they will be kicked if they still have the same role as before.
