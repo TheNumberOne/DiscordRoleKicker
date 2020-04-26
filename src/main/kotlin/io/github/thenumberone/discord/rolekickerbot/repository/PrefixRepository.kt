@@ -5,7 +5,13 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class PrefixRepository {
+    private val prefixes = mutableMapOf<Snowflake, String>()
+
     suspend fun get(server: Snowflake): String {
-        return "."
+        return prefixes.getOrDefault(server, ".")
+    }
+
+    suspend fun set(server: Snowflake, value: String) {
+        prefixes[server] = value
     }
 }

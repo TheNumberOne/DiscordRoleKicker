@@ -1,6 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+	application
+	idea
 	id("org.springframework.boot") version "2.2.6.RELEASE"
 	id("io.spring.dependency-management") version "1.0.9.RELEASE"
 	kotlin("jvm") version "1.3.71"
@@ -11,6 +13,7 @@ plugins {
 group = "io.github.thenumberone"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
+java.targetCompatibility = JavaVersion.VERSION_1_8
 
 val developmentOnly by configurations.creating
 configurations {
@@ -52,4 +55,9 @@ tasks.withType<KotlinCompile> {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
 		jvmTarget = "1.8"
 	}
+}
+
+application {
+	mainClassName = "io.github.thenumberone.discord.rolekickerbot.RoleKickerBotKt"
+	applicationName = "role_kicker_bot"
 }
