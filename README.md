@@ -20,7 +20,7 @@ Current version: 0.0.1-SNAPSHOT
 
 ## To run
 
-Java must be version 1.8 or higher.
+Java must be version 11 or higher.
 
 ```shell script
 ./gradlew bootJar
