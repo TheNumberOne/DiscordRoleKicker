@@ -10,5 +10,6 @@ interface RoleKickRuleRepository {
     fun removeRule(server: Snowflake, role: Snowflake)
     fun removeServer(server: Snowflake)
     fun addOrUpdateRole(rule: RoleKickRule): RoleKickService.AddedOrUpdated
+    fun getRules(guild: Snowflake): List<RoleKickRule>
 
 }

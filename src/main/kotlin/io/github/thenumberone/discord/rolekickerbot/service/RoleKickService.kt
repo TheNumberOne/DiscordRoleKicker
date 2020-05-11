@@ -6,9 +6,10 @@ import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 interface RoleKickService {
     suspend fun addRole(spec: RoleKickRule)
     suspend fun updateRole(spec: RoleKickRule)
-    suspend fun removeRole(server: Snowflake, role: Snowflake)
-    suspend fun removeServer(server: Snowflake)
+    suspend fun removeRole(guild: Snowflake, role: Snowflake)
+    suspend fun removeServer(guild: Snowflake)
     enum class AddedOrUpdated { Added, Updated }
 
     suspend fun addOrUpdateRole(roleRuleSpec: RoleKickRule): AddedOrUpdated
+    suspend fun getRules(guild: Snowflake): List<RoleKickRule>
 }

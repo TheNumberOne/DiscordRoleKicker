@@ -14,25 +14,29 @@ class RoleKickRuleRepositoryImpl : RoleKickRuleRepository {
     }
 
     override fun updateRule(rule: RoleKickRule) {
-        removeRule(rule.server, rule.role)
+        removeRule(rule.guildId, rule.roleId)
         addRule(rule)
     }
 
     override fun removeRule(server: Snowflake, role: Snowflake) {
-        rules.removeIf { it.server == server && it.role == role }
+        rules.removeIf { it.guildId == server && it.roleId == role }
     }
 
     override fun removeServer(server: Snowflake) {
-        rules.removeIf { it.server == server }
+        rules.removeIf { it.guildId == server }
     }
 
     override fun addOrUpdateRole(rule: RoleKickRule): RoleKickService.AddedOrUpdated {
-        return if (rules.removeIf { it.server == rule.server && it.role == it.role }) {
+        return if (rules.removeIf { it.guildId == rule.guildId && it.roleId == rule.roleId }) {
             addRule(rule)
             RoleKickService.AddedOrUpdated.Updated
         } else {
             addRule(rule)
             RoleKickService.AddedOrUpdated.Added
         }
+    }
+
+    override fun getRules(guild: Snowflake): List<RoleKickRule> {
+        return rules.filter { it.guildId == guild }
     }
 }

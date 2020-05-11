@@ -16,15 +16,19 @@ class DefaultRoleKickService(val roleKickRuleRepository: RoleKickRuleRepository)
         roleKickRuleRepository.updateRule(spec)
     }
 
-    override suspend fun removeRole(server: Snowflake, role: Snowflake) {
-        roleKickRuleRepository.removeRule(server, role)
+    override suspend fun removeRole(guild: Snowflake, role: Snowflake) {
+        roleKickRuleRepository.removeRule(guild, role)
     }
 
-    override suspend fun removeServer(server: Snowflake) {
-        roleKickRuleRepository.removeServer(server)
+    override suspend fun removeServer(guild: Snowflake) {
+        roleKickRuleRepository.removeServer(guild)
     }
 
     override suspend fun addOrUpdateRole(roleRuleSpec: RoleKickRule): AddedOrUpdated {
         return roleKickRuleRepository.addOrUpdateRole(roleRuleSpec)
+    }
+
+    override suspend fun getRules(guild: Snowflake): List<RoleKickRule> {
+        return roleKickRuleRepository.getRules(guild)
     }
 }
