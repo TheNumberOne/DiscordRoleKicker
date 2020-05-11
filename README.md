@@ -12,6 +12,12 @@ Current version: 0.0.1-SNAPSHOT
 ./gradlew build
 ```
 
+## Needed Bot Permissions
+
+3072
+ * View Channels
+ * Send Messages
+
 ## To run
 
 Java must be version 1.8 or higher.

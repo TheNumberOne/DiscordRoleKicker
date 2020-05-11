@@ -1,15 +1,17 @@
 package io.github.thenumberone.discord.rolekickerbot.command
 
 import discord4j.core.event.domain.message.MessageCreateEvent
-import kotlinx.coroutines.reactive.awaitSingle
+import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import org.springframework.stereotype.Component
 
 @Component
-class PingCommand : DiscordCommand {
+class PingCommand(val embedHelper: EmbedHelper) : SingleNameCommand {
     override val name: String = "ping"
 
     override suspend fun exec(message: MessageCreateEvent, commandText: String) {
-        val channel = message.message.channel.awaitSingle()
-        channel.createMessage("pong: $commandText").awaitSingle()
+        embedHelper.respondTo(message) {
+            setTitle("Pong")
+            setDescription(commandText)
+        }
     }
 }

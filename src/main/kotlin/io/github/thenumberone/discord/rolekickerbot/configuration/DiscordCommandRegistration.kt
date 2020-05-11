@@ -36,7 +36,7 @@ class DiscordCommandRegistration(
                 val commandName = if (parts.isNotEmpty()) parts[0] else ""
                 val commandArguments = if (parts.size >= 2) parts[1] else ""
 
-                val command = commands.firstOrNull { it.name == commandName } ?: return@mono null
+                val command = commands.firstOrNull { it.matches(commandName) } ?: return@mono null
                 try {
                     command.exec(event, commandArguments)
                 } catch (e: Exception) {
