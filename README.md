@@ -35,9 +35,10 @@ java -jar build/libs/DiscordRoleKicker-<version>.jar --discord.bot.token=YourRea
 Admin Commands:
  - `.setrolekickerprefix <prefix>` - set the prefix that the bot uses for the server to what you desire.
  - `.(addrole|editrole) <role name> <X> <Y> [<warning message>]` - adds or updates a role for the bot to watch
- - **not implemented** `.listrole(s)` - list the roles that are currently being watched
- - **not implemented** `.removerole <role name>` - removes the role from the list of those that are watched
+ - `.listrole(s)` - list the roles that are currently being watched
+ - `.removerole <role name>` - removes the role from the list of those that are watched
  - **not implemented** `.setwarningmessage <role name> <warning message>` - sets the warning messages sent to users
+ - **not implemented** `.listmember(s)` - list the members that are currently being tracked
  
 Additional requirements:
  - The bot will not ban users who can ban or with a role higher than it.

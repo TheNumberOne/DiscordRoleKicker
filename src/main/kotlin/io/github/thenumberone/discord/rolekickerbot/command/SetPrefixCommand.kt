@@ -12,11 +12,11 @@ class SetPrefixCommand(
 ) : SingleNameCommand, AdminCommand {
     override val name: String = "setrolekickerprefix"
 
-    override suspend fun execIfPrivileged(message: MessageCreateEvent, commandText: String) {
-        val guildId = message.guildId.orElse(null) ?: return
+    override suspend fun execIfPrivileged(event: MessageCreateEvent, commandText: String) {
+        val guildId = event.guildId.orElse(null) ?: return
         val before = prefixRepository.get(guildId)
         prefixRepository.set(guildId, commandText)
-        embedHelper.respondTo(message) {
+        embedHelper.respondTo(event) {
             setTitle("Set Prefix")
             addField("Before", before, true)
             addField("After", commandText, true)

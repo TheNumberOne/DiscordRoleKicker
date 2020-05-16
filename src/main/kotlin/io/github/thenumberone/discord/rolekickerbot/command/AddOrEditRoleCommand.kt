@@ -1,7 +1,6 @@
 package io.github.thenumberone.discord.rolekickerbot.command
 
 import discord4j.core.event.domain.message.MessageCreateEvent
-import discord4j.rest.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.service.RoleFinderService
@@ -11,7 +10,6 @@ import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService.Adde
 import io.github.thenumberone.discord.rolekickerbot.util.displayDurationHelp
 import io.github.thenumberone.discord.rolekickerbot.util.parseArguments
 import io.github.thenumberone.discord.rolekickerbot.util.parseDuration
-import io.github.thenumberone.discord.rolekickerbot.util.toAbbreviatedString
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -29,56 +27,39 @@ class AddOrEditRoleCommand(
     AdminCommand {
     override val names: Set<String> = setOf("addrole", "editrole")
 
-    override suspend fun execIfPrivileged(message: MessageCreateEvent, commandText: String) {
+    override suspend fun execIfPrivileged(event: MessageCreateEvent, commandText: String) {
+        val guild = event.guild.awaitFirstOrNull() ?: return
+        val channel = event.message.channel.awaitFirstOrNull() ?: return
+
         val parts = parseArguments(commandText)
         if (parts.size < 3) {
-            embedHelper.respondTo(message, embedTitle) {
+            embedHelper.respondTo(event, embedTitle) {
                 setDescription("Too few parameters")
-                addField("Syntax", "`(addrole|editrole) <warning time> <kick time> [<warning message>]`", false)
+                addField("Syntax", "`(addrole|editrole) <role> <warning time> <kick time> [<warning message>]`", false)
             }
             return
         }
         val (roleName, warningTimeString, kickTimeString) = parts
-        val warningMessage =
-            (if (parts.size >= 4) parts[3].trim() else "").ifEmpty { "Warned for having role $roleName too long." }
 
-        val warningTime = parseAndValidateTime(warningTimeString, "warning time", message) ?: return
-        val kickTime = parseAndValidateTime(kickTimeString, "kick time", message) ?: return
+        val role = roleFinderService.findAndValidateRole(guild, roleName, channel, embedTitle) ?: return
+        val warningTime = parseAndValidateTime(warningTimeString, "warning time", event) ?: return
+        val kickTime = parseAndValidateTime(kickTimeString, "kick time", event) ?: return
+        val warningMessage = (if (parts.size >= 4) parts[3].trim() else "").ifEmpty {
+            "Warned for having role ${role.mention} in ${guild.name} too long."
+        }
 
-        val roleId = findAndValidateRoleId(message, roleName) ?: return
-        val guildId = message.guildId.orElse(null) ?: return
-        val roleRuleSpec = RoleKickRule(guildId, roleId, warningTime, kickTime, warningMessage)
-        val addOrUpdated = roleKickService.addOrUpdateRole(roleRuleSpec)
+        val rule = RoleKickRule(guild.id, role.id, warningTime, kickTime, warningMessage)
+        val addOrUpdated = roleKickService.addOrUpdateRule(rule)
 
         logger.info("Added or updated role")
 
-        embedHelper.respondTo(message, embedTitle) {
+        embedHelper.respondTo(event, embedTitle) {
             when (addOrUpdated) {
                 Added -> setDescription("Added role kicker rule")
                 Updated -> setDescription("Updated role kicker rule")
             }
-            addField("role", roleName, true)
-            addField("warning time", warningTime.toAbbreviatedString(), true)
-            addField("kick time", kickTime.toAbbreviatedString(), true)
-            addField("warning message", warningMessage, false)
+            addRule(rule)
         }
-    }
-
-    private suspend fun findAndValidateRoleId(message: MessageCreateEvent, roleName: String): Snowflake? {
-        val guild = message.guild.awaitFirstOrNull() ?: return null
-        val roleIds = roleFinderService.findRoles(guild, roleName).map { it.id }
-        if (roleIds.isEmpty()) {
-            embedHelper.respondTo(message, embedTitle) {
-                setDescription("No roles with name $roleName found.")
-            }
-            return null
-        } else if (roleIds.size > 1) {
-            embedHelper.respondTo(message, embedTitle) {
-                setDescription("Multiple roles with $roleName found.")
-            }
-            return null
-        }
-        return roleIds.single()
     }
 
     private suspend fun parseAndValidateTime(
@@ -89,7 +70,7 @@ class AddOrEditRoleCommand(
         val duration = parseDuration(timeString)
         if (duration == null) {
             embedHelper.respondTo(message, embedTitle) {
-                setDescription("Invalid $varName specification")
+                setDescription("Invalid ${varName.decapitalize()} specification")
                 displayDurationHelp()
             }
             return null

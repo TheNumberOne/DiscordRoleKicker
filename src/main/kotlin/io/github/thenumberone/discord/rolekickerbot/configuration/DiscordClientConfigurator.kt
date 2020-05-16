@@ -3,6 +3,9 @@ package io.github.thenumberone.discord.rolekickerbot.configuration
 import discord4j.core.DiscordClient
 import discord4j.core.DiscordClientBuilder
 import discord4j.core.GatewayDiscordClient
+import discord4j.core.shard.GatewayBootstrap
+import discord4j.gateway.intent.Intent
+import discord4j.gateway.intent.IntentSet
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,7 +21,12 @@ class DiscordClientConfigurator {
     }
 
     @Bean
-    fun login(discordClient: DiscordClient): GatewayDiscordClient {
-        return discordClient.login().block()!!
+    fun intents(): IntentSet {
+        return IntentSet.of(Intent.GUILDS, Intent.GUILD_MEMBERS, Intent.GUILD_MESSAGES)
+    }
+
+    @Bean
+    fun login(discordClient: DiscordClient, intents: IntentSet): GatewayDiscordClient {
+        return GatewayBootstrap.create(discordClient).setEnabledIntents(intents).login().block()!!
     }
 }

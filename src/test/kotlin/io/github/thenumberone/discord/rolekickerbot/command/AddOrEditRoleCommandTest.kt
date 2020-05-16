@@ -2,6 +2,7 @@
 
 package io.github.thenumberone.discord.rolekickerbot.command
 
+import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
 import discord4j.rest.util.Snowflake
@@ -21,26 +22,30 @@ import java.util.*
 internal class AddOrEditRoleCommandTest {
     @Test
     fun `Should return an error message if no roles found`() = runBlocking {
+        val channel = mockk<MessageChannel>()
         val message = mockk<MessageCreateEvent> {
             every { guild } returns Mono.just(mockk {
                 every { roles } returns Flux.just(mockk {
                     every { name } returns "bad role"
                 })
             })
+            every { message } returns mockk message@{
+                every { this@message.channel } returns Mono.just(channel)
+            }
         }
 
         val embedSpec = mockk<EmbedCreateSpec>(relaxed = true)
 
         val embedHelper = mockk<EmbedHelper> {
-            coEvery { respondTo(message, any(), invoke(embedSpec)) } returns Unit
+            coEvery { send(channel, any(), invoke(embedSpec)) } returns Unit
         }
 
-        val command = AddOrEditRoleCommand(embedHelper, mockk(), RoleFinderService())
+        val command = AddOrEditRoleCommand(embedHelper, mockk(), RoleFinderService(embedHelper))
 
         command.execIfPrivileged(message, "test 1h 1w")
 
         verify { embedSpec.setDescription("No roles with name test found.") }
-        coVerify(exactly = 1) { embedHelper.respondTo(message, any(), any()) }
+        coVerify(exactly = 1) { embedHelper.send(channel, any(), any()) }
     }
 
     @Test
@@ -53,20 +58,26 @@ internal class AddOrEditRoleCommandTest {
                 every { getRoleById(roleId) } returns Mono.just(mockk {
                     every { name } returns "something"
                     every { id } returns roleId
+                    every { mention } returns mention(roleId)
                 })
+                every { name } returns "Test Guild"
+                every { id } returns guildId
             })
             every { getGuildId() } returns Optional.of(guildId)
+            every { message } returns mockk {
+                every { channel } returns Mono.just(mockk())
+            }
         }
 
         val service = mockk<RoleKickService> {
-            coEvery { addOrUpdateRole(any()) } returns RoleKickService.AddedOrUpdated.Added
+            coEvery { addOrUpdateRule(any()) } returns RoleKickService.AddedOrUpdated.Added
         }
-
-        val command = AddOrEditRoleCommand(mockk(relaxed = true), service, RoleFinderService())
+        val embedHelper = mockk<EmbedHelper>(relaxed = true)
+        val command = AddOrEditRoleCommand(embedHelper, service, RoleFinderService(embedHelper))
         command.execIfPrivileged(message, "<@&697276661095333958> 1w 1w")
 
         coVerify {
-            service.addOrUpdateRole(match { it.roleId == roleId })
+            service.addOrUpdateRule(match { it.roleId == roleId })
         }
     }
 }

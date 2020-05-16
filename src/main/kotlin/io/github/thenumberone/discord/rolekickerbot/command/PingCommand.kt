@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component
 class PingCommand(val embedHelper: EmbedHelper) : SingleNameCommand {
     override val name: String = "ping"
 
-    override suspend fun exec(message: MessageCreateEvent, commandText: String) {
-        embedHelper.respondTo(message) {
+    override suspend fun exec(event: MessageCreateEvent, commandText: String) {
+        embedHelper.respondTo(event) {
             setTitle("Pong")
             setDescription(commandText)
         }

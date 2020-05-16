@@ -18,8 +18,8 @@ class RoleKickRuleRepositoryImpl : RoleKickRuleRepository {
         addRule(rule)
     }
 
-    override fun removeRule(server: Snowflake, role: Snowflake) {
-        rules.removeIf { it.guildId == server && it.roleId == role }
+    override fun removeRule(server: Snowflake, role: Snowflake): Boolean {
+        return rules.removeIf { it.guildId == server && it.roleId == role }
     }
 
     override fun removeServer(server: Snowflake) {
@@ -38,5 +38,16 @@ class RoleKickRuleRepositoryImpl : RoleKickRuleRepository {
 
     override fun getRules(guild: Snowflake): List<RoleKickRule> {
         return rules.filter { it.guildId == guild }
+    }
+
+    override fun syncGuild(
+        guildId: Snowflake,
+        roleIds: Set<Snowflake>
+    ) {
+        rules.removeIf { it.guildId == guildId && it.roleId in roleIds }
+    }
+
+    override fun removeRules(rules: List<RoleKickRule>) {
+        this.rules.removeAll(rules)
     }
 }

@@ -1,10 +1,12 @@
 package io.github.thenumberone.discord.rolekickerbot.command
 
 import discord4j.core.event.domain.message.MessageCreateEvent
+import discord4j.core.spec.EmbedCreateSpec
+import discord4j.rest.util.Snowflake
+import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
 import io.github.thenumberone.discord.rolekickerbot.util.toAbbreviatedString
-import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.stereotype.Component
 
@@ -15,25 +17,24 @@ class ListRoles(private val roleKickService: RoleKickService, private val embedH
     MultipleNamesCommand, AdminCommand {
     override val names: Set<String> = setOf("listroles", "listrole")
 
-    override suspend fun execIfPrivileged(message: MessageCreateEvent, commandText: String) {
-        val guild = message.guild.awaitFirstOrNull() ?: return
+    override suspend fun execIfPrivileged(event: MessageCreateEvent, commandText: String) {
+        val guild = event.guild.awaitFirstOrNull() ?: return
         val guildId = guild.id
         val rules = roleKickService.getRules(guildId)
-        val roleNames = try {
-            rules.map { guild.getRoleById(it.roleId).awaitFirst().name }
-        } catch (e: NoSuchElementException) {
-            embedHelper.respondTo(message, title) {
-                setDescription("Problem finding the names of roles")
-            }
-            return
-        }
-        embedHelper.respondTo(message, "List Roles") {
-            for ((i, rule) in rules.withIndex()) {
-                addField("Role", roleNames[i], false)
-                addField("Warning Time", rule.timeTilWarning.toAbbreviatedString(), true)
-                addField("Kick Time", rule.timeTilKick.toAbbreviatedString(), true)
-                addField("Warning Message", rule.warningMessage, true)
+
+        embedHelper.respondTo(event, "List Roles") {
+            for (rule in rules) {
+                addRule(rule)
             }
         }
     }
 }
+
+fun EmbedCreateSpec.addRule(rule: RoleKickRule) {
+    addField("Role", mention(rule.roleId), false)
+    addField("Warning Time", rule.timeTilWarning.toAbbreviatedString(), true)
+    addField("Kick Time", rule.timeTilKick.toAbbreviatedString(), true)
+    addField("Warning Message", rule.warningMessage, true)
+}
+
+fun mention(snowflake: Snowflake) = "<@&${snowflake.asString()}>"
