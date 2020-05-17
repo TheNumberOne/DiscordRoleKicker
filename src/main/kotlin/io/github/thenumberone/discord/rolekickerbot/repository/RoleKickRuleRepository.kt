@@ -38,5 +38,6 @@ interface RoleKickRuleRepository {
     fun getRules(guild: Snowflake): List<RoleKickRule>
     fun syncGuild(guildId: Snowflake, roleIds: Set<Snowflake>)
     fun removeRules(rules: List<RoleKickRule>)
+    fun updateWarningMessage(roleId: Snowflake, warning: String)
 
 }

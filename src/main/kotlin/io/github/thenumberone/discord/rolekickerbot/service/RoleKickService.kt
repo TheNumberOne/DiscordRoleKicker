@@ -51,5 +51,6 @@ interface RoleKickService {
     suspend fun scanMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>)
     suspend fun removeMember(guildId: Snowflake, memberId: Snowflake)
     suspend fun updateMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>)
-    fun getTrackedMembers(guildId: Snowflake): List<TrackedMember>
+    suspend fun getTrackedMembers(guildId: Snowflake): List<TrackedMember>
+    suspend fun updateWarningMessage(id: Snowflake, warning: String)
 }

@@ -75,4 +75,14 @@ class RoleKickRuleRepositoryImpl : RoleKickRuleRepository {
     override fun removeRules(rules: List<RoleKickRule>) {
         this.rules.removeAll(rules)
     }
+
+    override fun updateWarningMessage(roleId: Snowflake, warning: String) {
+        rules.replaceAll { rule ->
+            if (rule.roleId == roleId) {
+                rule.copy(warningMessage = warning)
+            } else {
+                rule
+            }
+        }
+    }
 }

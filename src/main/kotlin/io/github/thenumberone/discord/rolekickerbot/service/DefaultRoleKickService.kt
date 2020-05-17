@@ -107,7 +107,11 @@ class DefaultRoleKickService(
         scanMember(guildId, memberId, roleIds)
     }
 
-    override fun getTrackedMembers(guildId: Snowflake): List<TrackedMember> {
+    override suspend fun updateWarningMessage(id: Snowflake, warning: String) {
+        roleKickRuleRepository.updateWarningMessage(id, warning)
+    }
+
+    override suspend fun getTrackedMembers(guildId: Snowflake): List<TrackedMember> {
         return trackedMembersRepository.findByGuild(guildId)
     }
 }

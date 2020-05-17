@@ -38,8 +38,8 @@ Admin Commands:
  - `.(addrole|editrole) <role name> <X> <Y> [<warning message>]` - adds or updates a role for the bot to watch
  - `.listrole(s)` - list the roles that are currently being watched
  - `.removerole <role name>` - removes the role from the list of those that are watched
- - **not implemented** `.setwarningmessage <role name> <warning message>` - sets the warning messages sent to users
- - **not implemented** `.listmember(s)` - list the members that are currently being tracked
+ - `.setwarningmessage <role name> <warning message>` - sets the warning messages sent to users
+ - `.listmember(s)` - list the members that are currently being tracked
  
 Additional requirements:
  - The bot will not ban users who can ban or with a role higher than it.
