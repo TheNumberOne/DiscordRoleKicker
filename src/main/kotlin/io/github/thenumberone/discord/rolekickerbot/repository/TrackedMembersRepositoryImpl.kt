@@ -29,8 +29,11 @@ import discord4j.rest.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
 import io.github.thenumberone.discord.rolekickerbot.data.TrackedMemberId
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.Instant
+
+private val logger = LoggerFactory.getLogger(TrackedMembersRepositoryImpl::class.java)
 
 @Repository
 class TrackedMembersRepositoryImpl : TrackedMembersRepository {
@@ -50,9 +53,13 @@ class TrackedMembersRepositoryImpl : TrackedMembersRepository {
                 TrackedMember(id, times)
             }
             val nowTracked = currentMember.trackedRoleIds.filterKeys { it in times }
-
-            val newMember = currentMember.copy(trackedRoleIds = times + nowTracked)
-            members[newMember.id] = newMember
+            val newTracked = times + nowTracked
+            if (newTracked.isEmpty()) {
+                members.remove(currentMember.id)
+            } else {
+                val newMember = currentMember.copy(trackedRoleIds = times + nowTracked)
+                members[newMember.id] = newMember
+            }
         }
     }
 
@@ -82,8 +89,27 @@ class TrackedMembersRepositoryImpl : TrackedMembersRepository {
             val (changedMembers, deletedMembers) = affectedMembers.map { member ->
                 member.copy(trackedRoleIds = member.trackedRoleIds - roleId)
             }.partition { it.trackedRoleIds.isNotEmpty() }
-
             members.putAll((newMembers + changedMembers).map { it.id to it })
+            deletedMembers.forEach { members.remove(it.id) }
+        }
+    }
+
+    override fun findByGuild(guildId: Snowflake): List<TrackedMember> {
+        return synchronized(this) {
+            members.filterKeys { it.guildId == guildId }
+        }.values.toList()
+    }
+
+    override fun removeRole(guildId: Snowflake, roleId: Snowflake) {
+        synchronized(this) {
+            val affectedMembers = members.values.filter { it.id.guildId == guildId && roleId in it.trackedRoleIds }
+
+            val (changedMembers, deletedMembers) = affectedMembers.map {
+                it.copy(trackedRoleIds = it.trackedRoleIds - roleId)
+            }.partition {
+                it.trackedRoleIds.isNotEmpty()
+            }
+            members.putAll(changedMembers.map { it.id to it })
             deletedMembers.forEach { members.remove(it.id) }
         }
     }

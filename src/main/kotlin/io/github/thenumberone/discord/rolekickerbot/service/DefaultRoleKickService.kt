@@ -28,6 +28,7 @@ package io.github.thenumberone.discord.rolekickerbot.service
 import discord4j.core.GatewayDiscordClient
 import discord4j.rest.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
+import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
 import io.github.thenumberone.discord.rolekickerbot.repository.RoleKickRuleRepository
 import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMembersRepository
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService.AddedOrUpdated
@@ -51,7 +52,12 @@ class DefaultRoleKickService(
     }
 
     override suspend fun removeRole(guild: Snowflake, role: Snowflake): Boolean {
-        return roleKickRuleRepository.removeRule(guild, role)
+        return if (roleKickRuleRepository.removeRule(guild, role)) {
+            trackedMembersRepository.removeRole(guild, role)
+            true
+        } else {
+            false
+        }
     }
 
     override suspend fun removeServer(guild: Snowflake) {
@@ -65,7 +71,7 @@ class DefaultRoleKickService(
     }
 
     private suspend fun onRoleAdded(rule: RoleKickRule) {
-        val guildMembers = discordClient.getGuildMembers(rule.guildId).collectList().awaitSingle()
+        val guildMembers = discordClient.requestMembers(rule.guildId).collectList().awaitSingle()
         val matchingMembers = guildMembers.filter { rule.roleId in it.roleIds }.map { it.id }.toSet()
         trackedMembersRepository.syncRole(rule.guildId, rule.roleId, matchingMembers, Instant.now())
     }
@@ -99,5 +105,9 @@ class DefaultRoleKickService(
 
     override suspend fun updateMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>) {
         scanMember(guildId, memberId, roleIds)
+    }
+
+    override fun getTrackedMembers(guildId: Snowflake): List<TrackedMember> {
+        return trackedMembersRepository.findByGuild(guildId)
     }
 }

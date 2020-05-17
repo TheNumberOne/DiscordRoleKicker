@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component
 private const val title = "List Roles"
 
 @Component
-class ListRoles(private val roleKickService: RoleKickService, private val embedHelper: EmbedHelper) :
+class ListRolesCommand(private val roleKickService: RoleKickService, private val embedHelper: EmbedHelper) :
     MultipleNamesCommand, AdminCommand {
     override val names: Set<String> = setOf("listroles", "listrole")
 
@@ -47,19 +47,21 @@ class ListRoles(private val roleKickService: RoleKickService, private val embedH
         val guildId = guild.id
         val rules = roleKickService.getRules(guildId)
 
-        embedHelper.respondTo(event, "List Roles") {
+        embedHelper.respondTo(event, title) {
             for (rule in rules) {
                 addRule(rule)
             }
         }
+        event.member.get().mention
     }
 }
 
 fun EmbedCreateSpec.addRule(rule: RoleKickRule) {
-    addField("Role", mention(rule.roleId), false)
+    addField("Role", mentionRole(rule.roleId), false)
     addField("Warning Time", rule.timeTilWarning.toAbbreviatedString(), true)
     addField("Kick Time", rule.timeTilKick.toAbbreviatedString(), true)
     addField("Warning Message", rule.warningMessage, true)
 }
 
-fun mention(snowflake: Snowflake) = "<@&${snowflake.asString()}>"
+fun mentionRole(snowflake: Snowflake) = "<@&${snowflake.asString()}>"
+fun mentionUser(snowflake: Snowflake) = "<@${snowflake.asString()}>"

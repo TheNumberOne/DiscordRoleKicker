@@ -14,7 +14,8 @@ Current version: 0.0.1-SNAPSHOT
 
 ## Needed Bot Permissions
 
-3072
+3074
+ * Kick Members
  * View Channels
  * Send Messages
 
@@ -46,9 +47,4 @@ Additional requirements:
 TODO:
  - Implement commands
  - Persist settings
- - Scan servers on startup
-    - Clear servers that are no longer attached.
-    - Remove users from being watched.
-    - Start timers for new users with roles.
- - Handle servers that are being removed.
  

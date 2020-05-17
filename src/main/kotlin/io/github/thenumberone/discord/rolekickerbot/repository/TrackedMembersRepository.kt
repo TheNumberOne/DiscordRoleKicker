@@ -27,6 +27,7 @@ package io.github.thenumberone.discord.rolekickerbot.repository
 
 import discord4j.rest.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
+import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
 import java.time.Instant
 
 interface TrackedMembersRepository {
@@ -45,5 +46,7 @@ interface TrackedMembersRepository {
     )
 
     fun syncRole(guildId: Snowflake, roleId: Snowflake, matchingMembers: Set<Snowflake>, now: Instant)
+    fun findByGuild(guildId: Snowflake): List<TrackedMember>
+    fun removeRole(guildId: Snowflake, roleId: Snowflake)
 
 }

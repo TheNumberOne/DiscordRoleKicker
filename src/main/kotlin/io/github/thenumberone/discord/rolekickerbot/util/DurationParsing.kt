@@ -62,27 +62,31 @@ fun parseDuration(s: String): Duration? {
     return duration
 }
 
-fun Duration.toAbbreviatedString() = buildString {
-    if (toDaysPart() >= 7) {
-        append(toDaysPart() / 7).append('w')
+fun Duration.toAbbreviatedString(fineDetail: Boolean = false) = buildString {
+    if (isNegative) {
+        append('-')
     }
-    if (toDaysPart() % 7 != 0L) {
-        append(toDaysPart() % 7).append('d')
+    val positive = abs()
+    if (positive.toDaysPart() >= 7) {
+        append(positive.toDaysPart() / 7).append('w')
     }
-    if (toHoursPart() > 0) {
-        append(toHoursPart()).append('h')
+    if (positive.toDaysPart() % 7 != 0L) {
+        append(positive.toDaysPart() % 7).append('d')
     }
-    if (toMinutesPart() > 0) {
-        append(toMinutesPart()).append('m')
+    if (positive.toHoursPart() > 0) {
+        append(positive.toHoursPart()).append('h')
     }
-    if (toSecondsPart() > 0) {
-        append(toSecondsPart()).append('s')
+    if (positive.toMinutesPart() > 0) {
+        append(positive.toMinutesPart()).append('m')
     }
-    if (toMillisPart() > 0) {
-        append(toMillisPart()).append("ms")
+    if (positive.toSecondsPart() > 0) {
+        append(positive.toSecondsPart()).append('s')
     }
-    if (toNanosPart() > 0) {
-        append(toNanosPart()).append("ns")
+    if (fineDetail && positive.toMillisPart() > 0) {
+        append(positive.toMillisPart()).append("ms")
+    }
+    if (fineDetail && positive.toNanosPart() % 1000000 > 0) {
+        append(positive.toNanosPart() % 1000000).append("ns")
     }
     if (isZero) {
         append("0s")

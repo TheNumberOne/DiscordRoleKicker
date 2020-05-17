@@ -83,7 +83,7 @@ internal class AddOrEditRoleCommandTest {
                 every { getRoleById(roleId) } returns Mono.just(mockk {
                     every { name } returns "something"
                     every { id } returns roleId
-                    every { mention } returns mention(roleId)
+                    every { mention } returns mentionRole(roleId)
                 })
                 every { name } returns "Test Guild"
                 every { id } returns guildId
