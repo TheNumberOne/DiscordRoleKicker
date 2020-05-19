@@ -23,21 +23,28 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.repository
+package io.github.thenumberone.discord.rolekickerbot.subscribers
 
-import discord4j.rest.util.Snowflake
-import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
-import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
+import discord4j.core.GatewayDiscordClient
+import mu.KotlinLogging
+import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
+import java.io.File
 
-interface RoleKickRuleRepository {
-    fun addRule(rule: RoleKickRule)
-    fun updateRule(rule: RoleKickRule)
-    fun removeRule(server: Snowflake, role: Snowflake): Boolean
-    fun removeServer(server: Snowflake)
-    fun addOrUpdateRole(rule: RoleKickRule): RoleKickService.AddedOrUpdated
-    fun getRules(guild: Snowflake): List<RoleKickRule>
-    fun syncGuild(guildId: Snowflake, roleIds: Set<Snowflake>)
-    fun removeRules(rules: List<RoleKickRule>)
-    fun updateWarningMessage(roleId: Snowflake, warning: String)
+private val logger = KotlinLogging.logger {}
 
+@Component
+class ApplicationInformationPrinter :
+    DiscordGatewaySubscriber {
+    override fun subscribe(gateway: GatewayDiscordClient): Mono<*> {
+        val permissions = 3074
+        val discordAuthUrl = "https://discord.com/api/oauth2/authorize"
+        val scope = "bot"
+        return gateway.applicationInfo.map { info ->
+            val id = info.id
+            val url = "$discordAuthUrl?client_id=${id.asString()}&permissions=$permissions&scope=$scope"
+            logger.info { "Add bot to your server using: $url" }
+            File("join url.txt").writeText(url)
+        }
+    }
 }

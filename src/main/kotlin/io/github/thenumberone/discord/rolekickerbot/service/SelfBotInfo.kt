@@ -25,18 +25,18 @@
 
 package io.github.thenumberone.discord.rolekickerbot.service
 
-import discord4j.core.GatewayDiscordClient
 import discord4j.core.`object`.entity.User
+import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGateway
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.stereotype.Component
 
 @Component
-class SelfBotInfo(val discordClient: GatewayDiscordClient) {
+class SelfBotInfo {
     suspend fun getBotName(): String {
         return getUser().username
     }
 
-    suspend fun getUser(): User = discordClient.self.awaitSingle()
+    suspend fun getUser(): User = getCurrentGateway().self.awaitSingle()
 
     suspend fun getImgUrl(): String {
         return getUser().avatarUrl

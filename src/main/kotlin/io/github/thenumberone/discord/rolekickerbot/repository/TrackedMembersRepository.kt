@@ -48,5 +48,6 @@ interface TrackedMembersRepository {
     fun syncRole(guildId: Snowflake, roleId: Snowflake, matchingMembers: Set<Snowflake>, now: Instant)
     fun findByGuild(guildId: Snowflake): List<TrackedMember>
     fun removeRole(guildId: Snowflake, roleId: Snowflake)
+    fun deleteAllInGuild(guild: Snowflake)
 
 }

@@ -2,3 +2,5 @@
 gradle/
 .idea/
 build/
+bot_state.mv.db
+join url.txt

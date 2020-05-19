@@ -26,30 +26,40 @@
 package io.github.thenumberone.discord.rolekickerbot.data
 
 import discord4j.rest.util.Snowflake
-import org.springframework.data.annotation.Id
-import org.springframework.data.relational.core.mapping.Table
+import kotlinx.coroutines.flow.Flow
+import org.springframework.data.r2dbc.repository.Modifying
+import org.springframework.data.r2dbc.repository.Query
+import org.springframework.data.repository.reactive.ReactiveCrudRepository
 import java.time.Duration
 
-@Table
-data class RoleKickRule(
-    @Id
-    val id: Long?,
-    val guildId: Snowflake,
-    val roleId: Snowflake,
-    val timeTilWarning: Duration,
-    /**
-     * This is the time between the warning and the kick
-     */
-    val timeTilKick: Duration,
-    val warningMessage: String
-) {
-    constructor(
-        guildId: Snowflake,
-        roleId: Snowflake,
-        timeTilWarning: Duration,
-        timeTilKick: Duration,
-        warningMessage: String
-    ) : this(
-        null, guildId, roleId, timeTilWarning, timeTilKick, warningMessage
+// Intellij's help isn't helpful for some methods.
+@Suppress("SpringDataRepositoryMethodParametersInspection")
+interface RoleKickRuleRepository : ReactiveCrudRepository<RoleKickRule, Long>, InBugWorkaroundRepository {
+    @Modifying
+    @Query(
+        """
+        UPDATE role_kick_rule
+        SET time_til_warning = :timeTilWarning, time_til_kick = :timeTilKick
+        WHERE role_id = :roleId
+        """
     )
+    suspend fun updateRuleTimes(roleId: Snowflake, timeTilWarning: Duration, timeTilKick: Duration): Boolean
+
+    suspend fun deleteByRoleId(roleId: Snowflake): Boolean
+
+    suspend fun deleteAllByGuildId(guildId: Snowflake): Int
+
+    fun findAllByGuildId(guildId: Snowflake): Flow<RoleKickRule>
+
+    suspend fun findByRoleId(roleId: Snowflake): RoleKickRule?
+
+    @Modifying
+    @Query(
+        """
+        UPDATE role_kick_rule
+        SET warning_message = :warning_message
+        WHERE role_id = :roleId
+        """
+    )
+    suspend fun updateWarningMessage(roleId: Snowflake, warningMessage: String)
 }

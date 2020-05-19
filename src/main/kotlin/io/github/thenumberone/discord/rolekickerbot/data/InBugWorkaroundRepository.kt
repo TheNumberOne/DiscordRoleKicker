@@ -23,20 +23,16 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.repository
+package io.github.thenumberone.discord.rolekickerbot.data
 
 import discord4j.rest.util.Snowflake
-import org.springframework.stereotype.Repository
+import kotlinx.coroutines.flow.Flow
 
-@Repository
-class PrefixRepository {
-    private val prefixes = mutableMapOf<Snowflake, String>()
+interface InBugWorkaroundRepository {
 
-    suspend fun get(server: Snowflake): String {
-        return prefixes.getOrDefault(server, ".")
-    }
+    fun findAllByGuildIdAndRoleIdIn(guildId: Snowflake, roleId: Collection<Snowflake>): Flow<RoleKickRule>
 
-    suspend fun set(server: Snowflake, value: String) {
-        prefixes[server] = value
-    }
+    suspend fun deleteAllByGuildIdAndRoleIdNotIn(guildId: Snowflake, roleId: Collection<Snowflake>): Int
+
+    suspend fun deleteAllByRoleIdIn(roleId: Collection<Snowflake>): Int
 }

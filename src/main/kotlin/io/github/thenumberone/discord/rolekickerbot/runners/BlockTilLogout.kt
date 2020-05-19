@@ -23,28 +23,21 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.command
+package io.github.thenumberone.discord.rolekickerbot.runners
 
-import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.data.PrefixService
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
+import io.github.thenumberone.discord.rolekickerbot.configuration.ApplicationMono
+import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
+import javax.annotation.Priority
 
 @Component
-class SetPrefixCommand(
-    val prefixRepository: PrefixService,
-    val embedHelper: EmbedHelper
-) : SingleNameCommand, AdminCommand {
-    override val name: String = "setrolekickerprefix"
-
-    override suspend fun execIfPrivileged(event: MessageCreateEvent, commandText: String) {
-        val guildId = event.guildId.orElse(null) ?: return
-        val before = prefixRepository.get(guildId)
-        prefixRepository.set(guildId, commandText)
-        embedHelper.respondTo(event) {
-            setTitle("Set Prefix")
-            addField("Before", before, true)
-            addField("After", commandText, true)
-        }
+@Priority(Int.MAX_VALUE)
+class BlockTilLogout(
+    @ApplicationMono
+    private val application: Mono<*>
+) : CommandLineRunner {
+    override fun run(vararg args: String?) {
+        application.block()
     }
 }

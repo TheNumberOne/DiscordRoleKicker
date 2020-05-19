@@ -23,28 +23,25 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.command
+package io.github.thenumberone.discord.rolekickerbot.repository
 
-import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.data.PrefixService
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
-import org.springframework.stereotype.Component
+import io.github.thenumberone.discord.rolekickerbot.data.R2DbcConfiguration
+import io.r2dbc.h2.H2ConnectionConfiguration
+import io.r2dbc.h2.H2ConnectionFactory
+import io.r2dbc.spi.ConnectionFactory
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 
-@Component
-class SetPrefixCommand(
-    val prefixRepository: PrefixService,
-    val embedHelper: EmbedHelper
-) : SingleNameCommand, AdminCommand {
-    override val name: String = "setrolekickerprefix"
-
-    override suspend fun execIfPrivileged(event: MessageCreateEvent, commandText: String) {
-        val guildId = event.guildId.orElse(null) ?: return
-        val before = prefixRepository.get(guildId)
-        prefixRepository.set(guildId, commandText)
-        embedHelper.respondTo(event) {
-            setTitle("Set Prefix")
-            addField("Before", before, true)
-            addField("After", commandText, true)
-        }
+@EnableR2dbcRepositories("io.github.thenumberone.discord.rolekickerbot")
+@Configuration
+class R2DbcTestConfiguration : R2DbcConfiguration() {
+    @Bean
+    override fun connectionFactory(): ConnectionFactory {
+        val config = H2ConnectionConfiguration.builder()
+            .inMemory("./bot_state")
+            .option("DB_CLOSE_DELAY=-1")
+            .build()
+        return H2ConnectionFactory(config)
     }
 }

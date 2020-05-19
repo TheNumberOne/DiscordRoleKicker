@@ -52,13 +52,13 @@ class ListMembersCommand(private val roleKickService: RoleKickService, private v
             }
         }
 
+        val now = Instant.now()
         embedHelper.respondTo(event, "List Tracked Members") {
             for ((roleId, roleMembers) in roleIdsToMembers) {
                 val memberMentions = mutableListOf<String>()
                 val timeTilWarn = mutableListOf<String>()
                 val timeTilKick = mutableListOf<String>()
 
-                val now = Instant.now()
                 val rule = rules.getValue(roleId)
 
                 for (member in roleMembers) {

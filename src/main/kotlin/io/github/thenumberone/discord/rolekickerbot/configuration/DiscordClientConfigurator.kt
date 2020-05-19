@@ -31,10 +31,22 @@ import discord4j.core.GatewayDiscordClient
 import discord4j.core.shard.GatewayBootstrap
 import discord4j.gateway.intent.Intent
 import discord4j.gateway.intent.IntentSet
+import io.github.thenumberone.discord.rolekickerbot.subscribers.DiscordGatewaySubscriber
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.reactor.ReactorContext
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import reactor.core.publisher.Hooks
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.whenComplete
+import reactor.util.context.Context
+import kotlin.coroutines.coroutineContext
+
+@Qualifier
+annotation class ApplicationMono
+
 
 @Configuration
 class DiscordClientConfigurator {
@@ -51,7 +63,39 @@ class DiscordClientConfigurator {
     }
 
     @Bean
-    fun login(discordClient: DiscordClient, intents: IntentSet): GatewayDiscordClient {
-        return GatewayBootstrap.create(discordClient).setEnabledIntents(intents).login().block()!!
+    fun beginLogin(discordClient: DiscordClient, intents: IntentSet?): Mono<GatewayDiscordClient> {
+        var bootstrap = GatewayBootstrap.create(discordClient)
+        if (intents != null) bootstrap = bootstrap.setEnabledIntents(intents)
+        return bootstrap.login().cache()
     }
+
+    @Bean
+    @ApplicationMono
+    fun subscribeGatewaySubscribers(
+        gatewayMono: Mono<GatewayDiscordClient>,
+        subscribers: List<DiscordGatewaySubscriber>
+    ): Mono<*> {
+        return gatewayMono
+            .flatMap { gateway ->
+                subscribers.map { subscriber ->
+                    subscriber
+                        .subscribe(gateway)
+                        .subscriberContext(Context.of(DiscordGatewayClientReactorContextKey, gateway))
+                }.whenComplete()
+            }
+    }
+}
+
+object DiscordGatewayClientReactorContextKey
+
+fun getCurrentGatewayMono(): Mono<GatewayDiscordClient> {
+    return Mono.subscriberContext().map { context ->
+        context.get<GatewayDiscordClient>(DiscordGatewayClientReactorContextKey)
+    }
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+suspend fun getCurrentGateway(): GatewayDiscordClient {
+    return coroutineContext[ReactorContext]?.context?.get(DiscordGatewayClientReactorContextKey)
+        ?: error("Couldn't find the gateway within current context.")
 }

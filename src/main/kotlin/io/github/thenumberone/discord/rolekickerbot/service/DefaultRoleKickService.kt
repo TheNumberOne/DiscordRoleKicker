@@ -25,59 +25,86 @@
 
 package io.github.thenumberone.discord.rolekickerbot.service
 
-import discord4j.core.GatewayDiscordClient
 import discord4j.rest.util.Snowflake
+import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGateway
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
+import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRuleRepository
 import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
-import io.github.thenumberone.discord.rolekickerbot.repository.RoleKickRuleRepository
 import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMembersRepository
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService.AddedOrUpdated
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitSingle
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.reactive.TransactionalOperator
+import org.springframework.transaction.reactive.executeAndAwait
 import java.time.Instant
+
+private val logger = LoggerFactory.getLogger(DefaultRoleKickService::class.java)
 
 @Service
 class DefaultRoleKickService(
     private val roleKickRuleRepository: RoleKickRuleRepository,
     private val trackedMembersRepository: TrackedMembersRepository,
-    private val discordClient: GatewayDiscordClient
+//    private val discordClient: GatewayDiscordClient,
+    private val transaction: TransactionalOperator
 ) : RoleKickService {
     override suspend fun addRole(rule: RoleKickRule) {
-        roleKickRuleRepository.addRule(rule)
-        onRoleAdded(rule)
-    }
+        transaction.executeAndAwait {
+            roleKickRuleRepository.save(rule).awaitSingle()
 
-    override suspend fun updateRole(rule: RoleKickRule) {
-        roleKickRuleRepository.updateRule(rule)
-    }
+            val guildMembers = getCurrentGateway().requestMembers(rule.guildId).collectList().awaitSingle()
+            val matchingMembers = guildMembers.filter { rule.roleId in it.roleIds }.map { it.id }.toSet()
 
-    override suspend fun removeRole(guild: Snowflake, role: Snowflake): Boolean {
-        return if (roleKickRuleRepository.removeRule(guild, role)) {
-            trackedMembersRepository.removeRole(guild, role)
-            true
-        } else {
-            false
+            trackedMembersRepository.syncRole(rule.guildId, rule.roleId, matchingMembers, Instant.now())
         }
     }
 
+    override suspend fun updateRole(rule: RoleKickRule) {
+        transaction.executeAndAwait {
+            if (!roleKickRuleRepository.updateRuleTimes(rule.roleId, rule.timeTilWarning, rule.timeTilKick)) {
+                require(false) { "Must update exist role!" }
+            } else {
+                logger.info("Updated rule")
+            }
+        }
+    }
+
+    override suspend fun removeRole(guild: Snowflake, role: Snowflake): Boolean {
+        return transaction.executeAndAwait {
+            if (roleKickRuleRepository.deleteByRoleId(role)) {
+                trackedMembersRepository.removeRole(guild, role)
+                true
+            } else {
+                false
+            }
+        } ?: false
+    }
+
     override suspend fun removeServer(guild: Snowflake) {
-        roleKickRuleRepository.removeServer(guild)
+        transaction.executeAndAwait {
+            roleKickRuleRepository.deleteAllByGuildId(guild)
+            trackedMembersRepository.deleteAllInGuild(guild)
+        }
     }
 
     override suspend fun addOrUpdateRule(rule: RoleKickRule): AddedOrUpdated {
-        val ret = roleKickRuleRepository.addOrUpdateRole(rule)
-        if (ret == AddedOrUpdated.Added) onRoleAdded(rule)
-        return ret
-    }
-
-    private suspend fun onRoleAdded(rule: RoleKickRule) {
-        val guildMembers = discordClient.requestMembers(rule.guildId).collectList().awaitSingle()
-        val matchingMembers = guildMembers.filter { rule.roleId in it.roleIds }.map { it.id }.toSet()
-        trackedMembersRepository.syncRole(rule.guildId, rule.roleId, matchingMembers, Instant.now())
+        return transaction.executeAndAwait {
+            val exists = roleKickRuleRepository.findByRoleId(rule.roleId) != null
+            if (exists) {
+                updateRole(rule)
+                AddedOrUpdated.Updated
+            } else {
+                addRole(rule)
+                AddedOrUpdated.Added
+            }
+        } ?: error("Problem updating table")
     }
 
     override suspend fun getRules(guild: Snowflake): List<RoleKickRule> {
-        return roleKickRuleRepository.getRules(guild)
+        return transaction.executeAndAwait {
+            roleKickRuleRepository.findAllByGuildId(guild).toList()
+        } ?: error("Problem looking up guild rules")
     }
 
     override suspend fun syncGuild(
@@ -85,33 +112,46 @@ class DefaultRoleKickService(
         roleIds: Set<Snowflake>,
         memberIdsToRoleIds: Map<Snowflake, Set<Snowflake>>
     ) {
-        roleKickRuleRepository.syncGuild(guildId, roleIds)
-        val rules = roleKickRuleRepository.getRules(guildId)
-        val matchingRules = memberIdsToRoleIds.mapValues { (_, memberRoleIds) ->
-            rules.filter { it.roleId in memberRoleIds }
-        }
-        trackedMembersRepository.syncGuild(guildId, roleIds, matchingRules, Instant.now())
+        return transaction.executeAndAwait {
+            roleKickRuleRepository.deleteAllByGuildIdAndRoleIdNotIn(guildId, roleIds)
+
+            val rules = roleKickRuleRepository.findAllByGuildId(guildId).toList()
+            val matchingRules = memberIdsToRoleIds.mapValues { (_, memberRoleIds) ->
+                rules.filter { it.roleId in memberRoleIds }
+            }
+            trackedMembersRepository.syncGuild(guildId, roleIds, matchingRules, Instant.now())
+        } ?: error("Problem syncing guild")
     }
 
     override suspend fun scanMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>) {
-        val rules = roleKickRuleRepository.getRules(guildId)
-        val matchingRules = rules.filter { it.roleId in roleIds }
-        trackedMembersRepository.syncMember(guildId, memberId, matchingRules, Instant.now())
+        transaction.executeAndAwait {
+            val rules = roleKickRuleRepository.findAllByGuildIdAndRoleIdIn(guildId, roleIds).toList()
+
+            trackedMembersRepository.syncMember(guildId, memberId, rules, Instant.now())
+        }
     }
 
     override suspend fun removeMember(guildId: Snowflake, memberId: Snowflake) {
-        trackedMembersRepository.syncMember(guildId, memberId, emptyList(), Instant.now())
+        transaction.executeAndAwait {
+            trackedMembersRepository.syncMember(guildId, memberId, emptyList(), Instant.now())
+        }
     }
 
     override suspend fun updateMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>) {
-        scanMember(guildId, memberId, roleIds)
+        transaction.executeAndAwait {
+            scanMember(guildId, memberId, roleIds)
+        }
     }
 
     override suspend fun updateWarningMessage(id: Snowflake, warning: String) {
-        roleKickRuleRepository.updateWarningMessage(id, warning)
+        transaction.executeAndAwait {
+            roleKickRuleRepository.updateWarningMessage(id, warning)
+        }
     }
 
     override suspend fun getTrackedMembers(guildId: Snowflake): List<TrackedMember> {
-        return trackedMembersRepository.findByGuild(guildId)
+        return transaction.executeAndAwait {
+            trackedMembersRepository.findByGuild(guildId)
+        } ?: error("Problem finding tracked members")
     }
 }

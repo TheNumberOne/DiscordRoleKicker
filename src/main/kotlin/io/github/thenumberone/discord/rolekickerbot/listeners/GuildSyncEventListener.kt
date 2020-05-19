@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component
 class GuildSyncEventListener(private val roleKickService: RoleKickService) : DiscordEventListener<GuildCreateEvent> {
     override suspend fun on(event: GuildCreateEvent) {
         val roles = event.guild.roleIds
-        val members: List<Member> = event.guild.members.collectList().awaitFirstOrNull() ?: return
+        val members: List<Member> = event.guild.requestMembers().collectList().awaitFirstOrNull() ?: return
         val membersToRoles = members.map { member ->
             member.id to member.roleIds
         }.toMap()

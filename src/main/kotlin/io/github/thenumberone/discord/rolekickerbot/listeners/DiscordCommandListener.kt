@@ -27,7 +27,7 @@ package io.github.thenumberone.discord.rolekickerbot.listeners
 
 import discord4j.core.event.domain.message.MessageCreateEvent
 import io.github.thenumberone.discord.rolekickerbot.command.DiscordCommand
-import io.github.thenumberone.discord.rolekickerbot.repository.PrefixRepository
+import io.github.thenumberone.discord.rolekickerbot.data.PrefixService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component
 @Component
 class DiscordCommandListener(
     val commands: List<DiscordCommand>,
-    val prefixRepository: PrefixRepository
+    val prefixService: PrefixService
 ) : DiscordEventListener<MessageCreateEvent> {
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DiscordCommandListener::class.java)
@@ -47,7 +47,7 @@ class DiscordCommandListener(
         }
         val content = event.message.content
         val server = event.guildId.orElse(null) ?: return
-        val prefix = prefixRepository.get(server)
+        val prefix = prefixService.get(server)
         if (!content.startsWith(prefix)) {
             return
         }
@@ -58,6 +58,7 @@ class DiscordCommandListener(
 
         val command = commands.firstOrNull { it.matches(commandName) } ?: return
         try {
+            logger.info("Received message \"$content\" for command $command")
             command.exec(event, commandArguments)
         } catch (e: Exception) {
             logger.error("Error while executing command: $content", e)

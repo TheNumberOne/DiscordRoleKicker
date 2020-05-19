@@ -113,4 +113,10 @@ class TrackedMembersRepositoryImpl : TrackedMembersRepository {
             deletedMembers.forEach { members.remove(it.id) }
         }
     }
+
+    override fun deleteAllInGuild(guild: Snowflake) {
+        synchronized(this) {
+            members.keys.removeIf { it.guildId == guild }
+        }
+    }
 }

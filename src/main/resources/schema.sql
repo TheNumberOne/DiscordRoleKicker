@@ -23,28 +23,23 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.command
+-- noinspection SqlResolveForFile @ object-type/"SERIAL"
 
-import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.data.PrefixService
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
-import org.springframework.stereotype.Component
+CREATE TABLE IF NOT EXISTS role_kick_rule
+(
+    id               SERIAL PRIMARY KEY,
+    guild_id         LONG    NOT NULL,
+    role_id          LONG    NOT NULL UNIQUE,
+    time_til_warning VARCHAR NOT NULL,
+    time_til_kick    VARCHAR NOT NULL,
+    warning_message  VARCHAR NOT NULL
+);
 
-@Component
-class SetPrefixCommand(
-    val prefixRepository: PrefixService,
-    val embedHelper: EmbedHelper
-) : SingleNameCommand, AdminCommand {
-    override val name: String = "setrolekickerprefix"
+CREATE INDEX IF NOT EXISTS role_kick_rule_guild_id_index ON role_kick_rule (guild_id);
+CREATE INDEX IF NOT EXISTS role_kick_rule_role_id_index ON role_kick_rule (role_id);
 
-    override suspend fun execIfPrivileged(event: MessageCreateEvent, commandText: String) {
-        val guildId = event.guildId.orElse(null) ?: return
-        val before = prefixRepository.get(guildId)
-        prefixRepository.set(guildId, commandText)
-        embedHelper.respondTo(event) {
-            setTitle("Set Prefix")
-            addField("Before", before, true)
-            addField("After", commandText, true)
-        }
-    }
-}
+CREATE TABLE IF NOT EXISTS server_prefix
+(
+    guild_id LONG PRIMARY KEY NOT NULL,
+    prefix   VARCHAR          NOT NULL
+)
