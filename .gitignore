@@ -3,3 +3,4 @@
 build/
 bot_state.mv.db
 join url.txt
+bot_state.trace.db

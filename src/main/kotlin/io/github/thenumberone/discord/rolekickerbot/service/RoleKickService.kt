@@ -27,7 +27,7 @@ package io.github.thenumberone.discord.rolekickerbot.service
 
 import discord4j.rest.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
-import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
+import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMember
 
 interface RoleKickService {
     suspend fun addRole(rule: RoleKickRule)
@@ -39,9 +39,9 @@ interface RoleKickService {
     /**
      * @return true if the role was removed. False if the role was not being tracked.
      */
-    suspend fun removeRole(guild: Snowflake, role: Snowflake): Boolean
-    suspend fun removeServer(guild: Snowflake)
-    suspend fun getRules(guild: Snowflake): List<RoleKickRule>
+    suspend fun removeRole(guild: Snowflake, roleId: Snowflake): Boolean
+    suspend fun removeServer(guildId: Snowflake)
+    suspend fun getRules(guildId: Snowflake): List<RoleKickRule>
     suspend fun syncGuild(
         guildId: Snowflake,
         roleIds: Set<Snowflake>,

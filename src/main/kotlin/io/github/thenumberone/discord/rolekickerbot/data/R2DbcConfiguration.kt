@@ -39,12 +39,14 @@ import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration
 import org.springframework.data.r2dbc.connectionfactory.init.CompositeDatabasePopulator
 import org.springframework.data.r2dbc.connectionfactory.init.ConnectionFactoryInitializer
 import org.springframework.data.r2dbc.connectionfactory.init.ResourceDatabasePopulator
+import java.time.Instant
 
 abstract class R2DbcConfiguration : AbstractR2dbcConfiguration() {
     override fun getCustomConverters(): MutableList<Any> {
         return mutableListOf(
             SnowflakeToLongConverter,
-            LongToSnowflakeConverter
+            LongToSnowflakeConverter,
+            KeepInstantTheSameConverter
         )
     }
 
@@ -81,4 +83,9 @@ object SnowflakeToLongConverter : Converter<Snowflake, Long> {
 @ReadingConverter
 object LongToSnowflakeConverter : Converter<Long, Snowflake> {
     override fun convert(source: Long): Snowflake = Snowflake.of(source)
+}
+
+@WritingConverter
+object KeepInstantTheSameConverter : Converter<Instant, Instant> {
+    override fun convert(source: Instant): Instant = source
 }

@@ -42,4 +42,25 @@ CREATE TABLE IF NOT EXISTS server_prefix
 (
     guild_id LONG PRIMARY KEY NOT NULL,
     prefix   VARCHAR          NOT NULL
-)
+);
+
+-- @Id val id: Long?,
+--     val memberId: Snowflake,
+--     val guildId: Snowflake,
+--     val roleId: Snowflake,
+--     val startedTracking: Instant
+
+CREATE TABLE IF NOT EXISTS tracked_member
+(
+    id               SERIAL PRIMARY KEY,
+    member_id        LONG                     NOT NULL,
+    guild_id         LONG                     NOT NULL,
+    role_id          LONG                     NOT NULL,
+    started_tracking TIMESTAMP WITH TIME ZONE NOT NULL,
+    UNIQUE (member_id, guild_id, role_id)
+);
+
+CREATE INDEX IF NOT EXISTS tracked_member_member_id_index on tracked_member (member_id);
+CREATE INDEX IF NOT EXISTS tracked_member_guild_id_index on tracked_member (guild_id);
+CREATE INDEX IF NOT EXISTS tracked_member_role_id_index on tracked_member (role_id);
+

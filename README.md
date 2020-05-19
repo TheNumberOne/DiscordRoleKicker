@@ -42,9 +42,5 @@ Admin Commands:
  - `.listmember(s)` - list the members that are currently being tracked
  
 Additional requirements:
- - The bot will not ban users who can ban or with a role higher than it.
-
-TODO:
- - Implement commands
- - Persist settings
+ - **not implemented** The bot will not ban users who can ban or with a role higher than it.
  

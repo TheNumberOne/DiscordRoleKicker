@@ -29,8 +29,8 @@ import discord4j.rest.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGateway
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRuleRepository
-import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
-import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMembersRepository
+import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMember
+import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMembersRepository2
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService.AddedOrUpdated
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitSingle
@@ -45,9 +45,8 @@ private val logger = LoggerFactory.getLogger(DefaultRoleKickService::class.java)
 @Service
 class DefaultRoleKickService(
     private val roleKickRuleRepository: RoleKickRuleRepository,
-    private val trackedMembersRepository: TrackedMembersRepository,
-//    private val discordClient: GatewayDiscordClient,
-    private val transaction: TransactionalOperator
+    private val transaction: TransactionalOperator,
+    private val trackedMembersRepository2: TrackedMembersRepository2
 ) : RoleKickService {
     override suspend fun addRole(rule: RoleKickRule) {
         transaction.executeAndAwait {
@@ -55,8 +54,7 @@ class DefaultRoleKickService(
 
             val guildMembers = getCurrentGateway().requestMembers(rule.guildId).collectList().awaitSingle()
             val matchingMembers = guildMembers.filter { rule.roleId in it.roleIds }.map { it.id }.toSet()
-
-            trackedMembersRepository.syncRole(rule.guildId, rule.roleId, matchingMembers, Instant.now())
+            trackedMembersRepository2.syncRole(rule.guildId, rule.roleId, matchingMembers, Instant.now())
         }
     }
 
@@ -70,10 +68,10 @@ class DefaultRoleKickService(
         }
     }
 
-    override suspend fun removeRole(guild: Snowflake, role: Snowflake): Boolean {
+    override suspend fun removeRole(guild: Snowflake, roleId: Snowflake): Boolean {
         return transaction.executeAndAwait {
-            if (roleKickRuleRepository.deleteByRoleId(role)) {
-                trackedMembersRepository.removeRole(guild, role)
+            if (roleKickRuleRepository.deleteByRoleId(roleId)) {
+                trackedMembersRepository2.deleteAllByGuildIdAndRoleId(guild, roleId)
                 true
             } else {
                 false
@@ -81,10 +79,10 @@ class DefaultRoleKickService(
         } ?: false
     }
 
-    override suspend fun removeServer(guild: Snowflake) {
+    override suspend fun removeServer(guildId: Snowflake) {
         transaction.executeAndAwait {
-            roleKickRuleRepository.deleteAllByGuildId(guild)
-            trackedMembersRepository.deleteAllInGuild(guild)
+            roleKickRuleRepository.deleteAllByGuildId(guildId)
+            trackedMembersRepository2.deleteAllByGuildId(guildId)
         }
     }
 
@@ -101,9 +99,9 @@ class DefaultRoleKickService(
         } ?: error("Problem updating table")
     }
 
-    override suspend fun getRules(guild: Snowflake): List<RoleKickRule> {
+    override suspend fun getRules(guildId: Snowflake): List<RoleKickRule> {
         return transaction.executeAndAwait {
-            roleKickRuleRepository.findAllByGuildId(guild).toList()
+            roleKickRuleRepository.findAllByGuildId(guildId).toList()
         } ?: error("Problem looking up guild rules")
     }
 
@@ -112,28 +110,31 @@ class DefaultRoleKickService(
         roleIds: Set<Snowflake>,
         memberIdsToRoleIds: Map<Snowflake, Set<Snowflake>>
     ) {
-        return transaction.executeAndAwait {
+        transaction.executeAndAwait {
             roleKickRuleRepository.deleteAllByGuildIdAndRoleIdNotIn(guildId, roleIds)
 
             val rules = roleKickRuleRepository.findAllByGuildId(guildId).toList()
             val matchingRules = memberIdsToRoleIds.mapValues { (_, memberRoleIds) ->
-                rules.filter { it.roleId in memberRoleIds }
+                rules.filter { it.roleId in memberRoleIds }.map { it.roleId }
             }
-            trackedMembersRepository.syncGuild(guildId, roleIds, matchingRules, Instant.now())
+            trackedMembersRepository2.syncGuild(guildId, matchingRules, Instant.now())
         } ?: error("Problem syncing guild")
     }
 
     override suspend fun scanMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>) {
         transaction.executeAndAwait {
-            val rules = roleKickRuleRepository.findAllByGuildIdAndRoleIdIn(guildId, roleIds).toList()
+            val rules = roleKickRuleRepository
+                .findAllByGuildIdAndRoleIdIn(guildId, roleIds)
+                .toList()
+                .map { it.roleId }
 
-            trackedMembersRepository.syncMember(guildId, memberId, rules, Instant.now())
+            trackedMembersRepository2.syncMember(guildId, memberId, rules, Instant.now())
         }
     }
 
     override suspend fun removeMember(guildId: Snowflake, memberId: Snowflake) {
         transaction.executeAndAwait {
-            trackedMembersRepository.syncMember(guildId, memberId, emptyList(), Instant.now())
+            trackedMembersRepository2.deleteAllByGuildIdAndMemberId(guildId, memberId)
         }
     }
 
@@ -151,7 +152,7 @@ class DefaultRoleKickService(
 
     override suspend fun getTrackedMembers(guildId: Snowflake): List<TrackedMember> {
         return transaction.executeAndAwait {
-            trackedMembersRepository.findByGuild(guildId)
+            trackedMembersRepository2.findAllByGuildId(guildId).toList()
         } ?: error("Problem finding tracked members")
     }
 }

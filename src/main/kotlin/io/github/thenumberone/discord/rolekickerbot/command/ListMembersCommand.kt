@@ -26,8 +26,6 @@
 package io.github.thenumberone.discord.rolekickerbot.command
 
 import discord4j.core.event.domain.message.MessageCreateEvent
-import discord4j.rest.util.Snowflake
-import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
 import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
 import io.github.thenumberone.discord.rolekickerbot.util.toAbbreviatedString
@@ -45,12 +43,7 @@ class ListMembersCommand(private val roleKickService: RoleKickService, private v
         val members = roleKickService.getTrackedMembers(guildId)
         val rules = roleKickService.getRules(guildId).map { it.roleId to it }.toMap()
 
-        val roleIdsToMembers = mutableMapOf<Snowflake, MutableList<TrackedMember>>()
-        for (member in members) {
-            member.trackedRoleIds.keys.forEach { id ->
-                roleIdsToMembers.getOrPut(id) { mutableListOf() }.add(member)
-            }
-        }
+        val roleIdsToMembers = members.groupBy { it.roleId }
 
         val now = Instant.now()
         embedHelper.respondTo(event, "List Tracked Members") {
@@ -62,9 +55,9 @@ class ListMembersCommand(private val roleKickService: RoleKickService, private v
                 val rule = rules.getValue(roleId)
 
                 for (member in roleMembers) {
-                    val timeStarted = member.trackedRoleIds.getValue(roleId)
+                    val timeStarted = member.startedTracking
 
-                    memberMentions.add(mentionUser(member.id.memberId))
+                    memberMentions.add(mentionUser(member.memberId))
                     val timeTilWarning = rule.timeTilWarning - Duration.between(timeStarted, now)
                     timeTilWarn.add(timeTilWarning.toAbbreviatedString())
                     timeTilKick.add((timeTilWarning + rule.timeTilKick).toAbbreviatedString())
