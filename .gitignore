@@ -1,5 +1,4 @@
 .gradle/
-gradle/
 .idea/
 build/
 bot_state.mv.db
