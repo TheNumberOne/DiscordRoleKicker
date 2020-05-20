@@ -30,7 +30,8 @@ import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGate
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRuleRepository
 import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMember
-import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMembersRepository2
+import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMembersRepository
+import io.github.thenumberone.discord.rolekickerbot.scheduler.TrackedMemberScheduler
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService.AddedOrUpdated
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitSingle
@@ -46,19 +47,25 @@ private val logger = LoggerFactory.getLogger(DefaultRoleKickService::class.java)
 class DefaultRoleKickService(
     private val roleKickRuleRepository: RoleKickRuleRepository,
     private val transaction: TransactionalOperator,
-    private val trackedMembersRepository2: TrackedMembersRepository2
+    private val trackedMembersRepository: TrackedMembersRepository,
+    private val scheduler: TrackedMemberScheduler
 ) : RoleKickService {
     override suspend fun addRole(rule: RoleKickRule) {
+        addRuleWithoutScheduler(rule)
+        scheduler.refresh()
+    }
+
+    private suspend fun addRuleWithoutScheduler(rule: RoleKickRule) {
         transaction.executeAndAwait {
             roleKickRuleRepository.save(rule).awaitSingle()
 
             val guildMembers = getCurrentGateway().requestMembers(rule.guildId).collectList().awaitSingle()
             val matchingMembers = guildMembers.filter { rule.roleId in it.roleIds }.map { it.id }.toSet()
-            trackedMembersRepository2.syncRole(rule.guildId, rule.roleId, matchingMembers, Instant.now())
+            trackedMembersRepository.syncRole(rule.guildId, rule.roleId, matchingMembers, Instant.now())
         }
     }
 
-    override suspend fun updateRole(rule: RoleKickRule) {
+    private suspend fun updateRuleWithoutScheduler(rule: RoleKickRule) {
         transaction.executeAndAwait {
             if (!roleKickRuleRepository.updateRuleTimes(rule.roleId, rule.timeTilWarning, rule.timeTilKick)) {
                 require(false) { "Must update exist role!" }
@@ -68,35 +75,47 @@ class DefaultRoleKickService(
         }
     }
 
+    override suspend fun updateRole(rule: RoleKickRule) {
+        updateRuleWithoutScheduler(rule)
+        scheduler.refresh()
+    }
+
     override suspend fun removeRole(guild: Snowflake, roleId: Snowflake): Boolean {
-        return transaction.executeAndAwait {
+        val removed = transaction.executeAndAwait {
             if (roleKickRuleRepository.deleteByRoleId(roleId)) {
-                trackedMembersRepository2.deleteAllByGuildIdAndRoleId(guild, roleId)
+                trackedMembersRepository.deleteAllByGuildIdAndRoleId(guild, roleId)
                 true
             } else {
                 false
             }
         } ?: false
+        if (removed) {
+            scheduler.refresh()
+        }
+        return removed
     }
 
     override suspend fun removeServer(guildId: Snowflake) {
         transaction.executeAndAwait {
             roleKickRuleRepository.deleteAllByGuildId(guildId)
-            trackedMembersRepository2.deleteAllByGuildId(guildId)
+            trackedMembersRepository.deleteAllByGuildId(guildId)
         }
+        scheduler.refresh()
     }
 
     override suspend fun addOrUpdateRule(rule: RoleKickRule): AddedOrUpdated {
-        return transaction.executeAndAwait {
+        val addedOrUpdated = transaction.executeAndAwait {
             val exists = roleKickRuleRepository.findByRoleId(rule.roleId) != null
             if (exists) {
-                updateRole(rule)
+                updateRuleWithoutScheduler(rule)
                 AddedOrUpdated.Updated
             } else {
-                addRole(rule)
+                addRuleWithoutScheduler(rule)
                 AddedOrUpdated.Added
             }
         } ?: error("Problem updating table")
+        scheduler.refresh()
+        return addedOrUpdated
     }
 
     override suspend fun getRules(guildId: Snowflake): List<RoleKickRule> {
@@ -117,8 +136,9 @@ class DefaultRoleKickService(
             val matchingRules = memberIdsToRoleIds.mapValues { (_, memberRoleIds) ->
                 rules.filter { it.roleId in memberRoleIds }.map { it.roleId }
             }
-            trackedMembersRepository2.syncGuild(guildId, matchingRules, Instant.now())
+            trackedMembersRepository.syncGuild(guildId, matchingRules, Instant.now())
         } ?: error("Problem syncing guild")
+        scheduler.refresh()
     }
 
     override suspend fun scanMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>) {
@@ -128,31 +148,35 @@ class DefaultRoleKickService(
                 .toList()
                 .map { it.roleId }
 
-            trackedMembersRepository2.syncMember(guildId, memberId, rules, Instant.now())
+            trackedMembersRepository.syncMember(guildId, memberId, rules, Instant.now())
         }
+        scheduler.refresh()
     }
 
     override suspend fun removeMember(guildId: Snowflake, memberId: Snowflake) {
         transaction.executeAndAwait {
-            trackedMembersRepository2.deleteAllByGuildIdAndMemberId(guildId, memberId)
+            trackedMembersRepository.deleteAllByGuildIdAndMemberId(guildId, memberId)
         }
+        scheduler.refresh()
     }
 
     override suspend fun updateMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>) {
         transaction.executeAndAwait {
             scanMember(guildId, memberId, roleIds)
         }
+        scheduler.refresh()
     }
 
     override suspend fun updateWarningMessage(id: Snowflake, warning: String) {
         transaction.executeAndAwait {
             roleKickRuleRepository.updateWarningMessage(id, warning)
         }
+        scheduler.refresh()
     }
 
     override suspend fun getTrackedMembers(guildId: Snowflake): List<TrackedMember> {
         return transaction.executeAndAwait {
-            trackedMembersRepository2.findAllByGuildId(guildId).toList()
+            trackedMembersRepository.findAllByGuildId(guildId).toList()
         } ?: error("Problem finding tracked members")
     }
 }

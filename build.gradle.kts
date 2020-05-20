@@ -50,6 +50,7 @@ configurations {
 repositories {
     maven { setUrl("https://oss.sonatype.org/content/repositories/snapshots") }
     mavenCentral()
+    maven { setUrl("https://jitpack.io") }
 }
 
 dependencies {
@@ -66,7 +67,6 @@ dependencies {
     testImplementation("io.projectreactor:reactor-test")
 
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-    implementation("org.springframework.boot:spring-boot-starter-quartz")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
@@ -75,7 +75,8 @@ dependencies {
     }
 
     runtimeOnly("com.h2database:h2")
-    implementation("io.r2dbc:r2dbc-h2:0.8.3.RELEASE")
+    implementation("com.github.TheNumberOne:r2dbc-h2:0.8.x-SNAPSHOT")
+//    implementation("io.r2dbc:r2dbc-h2:0.8.3.RELEASE")
 
     testImplementation("io.mockk:mockk:1.10.0")
     testImplementation("com.ninja-squad:springmockk:2.0.1")

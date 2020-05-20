@@ -30,8 +30,8 @@ java -jar build/libs/DiscordRoleKicker-<version>.jar --discord.bot.token=YourRea
 
 ## Basic Functionality
  - User is assigned a role that the bot listens to.
- - **not implemented** After `<X>` time, the user is warned they will be kicked if they still have the same role as before.
- - **not implemented** After `<Y>` more time, the user is kicked.
+ - After `<X>` time, the user is warned they will be kicked if they still have the same role as before.
+ - After `<Y>` more time, the user is kicked.
  
 Admin Commands:
  - `.setrolekickerprefix <prefix>` - set the prefix that the bot uses for the server to what you desire.
@@ -42,5 +42,5 @@ Admin Commands:
  - `.listmember(s)` - list the members that are currently being tracked
  
 Additional requirements:
- - **not implemented** The bot will not ban users who can ban or with a role higher than it.
+ - The bot will not ban users who can ban or with a role higher than it.
  

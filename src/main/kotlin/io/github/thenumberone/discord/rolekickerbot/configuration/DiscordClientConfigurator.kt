@@ -34,6 +34,7 @@ import discord4j.gateway.intent.IntentSet
 import io.github.thenumberone.discord.rolekickerbot.subscribers.DiscordGatewaySubscriber
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.reactor.ReactorContext
+import kotlinx.coroutines.withContext
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -84,6 +85,9 @@ class DiscordClientConfigurator {
                 }.whenComplete()
             }
     }
+
+//    @Bean
+//    fun gateway(monoGateway: Mono<GatewayDiscordClient>) = monoGateway.block()
 }
 
 object DiscordGatewayClientReactorContextKey
@@ -98,4 +102,11 @@ fun getCurrentGatewayMono(): Mono<GatewayDiscordClient> {
 suspend fun getCurrentGateway(): GatewayDiscordClient {
     return coroutineContext[ReactorContext]?.context?.get(DiscordGatewayClientReactorContextKey)
         ?: error("Couldn't find the gateway within current context.")
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+suspend fun <T> injectGateway(gateway: GatewayDiscordClient, f: suspend () -> T): T {
+    val oldContext = coroutineContext[ReactorContext]?.context ?: Context.empty()
+    val newContext = oldContext.put(DiscordGatewayClientReactorContextKey, gateway)
+    return withContext(coroutineContext + ReactorContext(newContext)) { f() }
 }

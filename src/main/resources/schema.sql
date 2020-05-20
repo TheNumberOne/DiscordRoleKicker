@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS role_kick_rule
     id               SERIAL PRIMARY KEY,
     guild_id         LONG    NOT NULL,
     role_id          LONG    NOT NULL UNIQUE,
-    time_til_warning VARCHAR NOT NULL,
-    time_til_kick    VARCHAR NOT NULL,
+    time_til_warning INTERVAL SECOND(10) NOT NULL,
+    time_til_kick    INTERVAL SECOND(10) NOT NULL,
     warning_message  VARCHAR NOT NULL
 );
 
@@ -44,12 +44,6 @@ CREATE TABLE IF NOT EXISTS server_prefix
     prefix   VARCHAR          NOT NULL
 );
 
--- @Id val id: Long?,
---     val memberId: Snowflake,
---     val guildId: Snowflake,
---     val roleId: Snowflake,
---     val startedTracking: Instant
-
 CREATE TABLE IF NOT EXISTS tracked_member
 (
     id               SERIAL PRIMARY KEY,
@@ -57,6 +51,8 @@ CREATE TABLE IF NOT EXISTS tracked_member
     guild_id         LONG                     NOT NULL,
     role_id          LONG                     NOT NULL,
     started_tracking TIMESTAMP WITH TIME ZONE NOT NULL,
+    tried_warn       BOOLEAN                  NOT NULL,
+    tried_kick       BOOLEAN                  NOT NULL,
     UNIQUE (member_id, guild_id, role_id)
 );
 

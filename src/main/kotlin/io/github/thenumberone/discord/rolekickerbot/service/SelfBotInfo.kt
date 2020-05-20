@@ -25,6 +25,7 @@
 
 package io.github.thenumberone.discord.rolekickerbot.service
 
+import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.User
 import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGateway
 import kotlinx.coroutines.reactive.awaitSingle
@@ -40,5 +41,10 @@ class SelfBotInfo {
 
     suspend fun getImgUrl(): String {
         return getUser().avatarUrl
+    }
+
+    suspend fun canBan(user: Member): Boolean {
+        val selfUser = user.guild.awaitSingle().selfMember.awaitSingle()
+        return selfUser.isHigher(user).awaitSingle()
     }
 }

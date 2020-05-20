@@ -29,6 +29,9 @@ import discord4j.rest.util.Snowflake
 import io.r2dbc.h2.H2ConnectionConfiguration
 import io.r2dbc.h2.H2ConnectionFactory
 import io.r2dbc.spi.ConnectionFactory
+import org.h2.api.Interval
+import org.h2.util.JSR310Utils
+import org.h2.value.ValueInterval
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
@@ -39,6 +42,7 @@ import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration
 import org.springframework.data.r2dbc.connectionfactory.init.CompositeDatabasePopulator
 import org.springframework.data.r2dbc.connectionfactory.init.ConnectionFactoryInitializer
 import org.springframework.data.r2dbc.connectionfactory.init.ResourceDatabasePopulator
+import java.time.Duration
 import java.time.Instant
 
 abstract class R2DbcConfiguration : AbstractR2dbcConfiguration() {
@@ -46,7 +50,9 @@ abstract class R2DbcConfiguration : AbstractR2dbcConfiguration() {
         return mutableListOf(
             SnowflakeToLongConverter,
             LongToSnowflakeConverter,
-            KeepInstantTheSameConverter
+            KeepInstantTheSameConverter,
+            KeepDurationTheSameConverter,
+            IntervalToDurationConverter
         )
     }
 
@@ -88,4 +94,24 @@ object LongToSnowflakeConverter : Converter<Long, Snowflake> {
 @WritingConverter
 object KeepInstantTheSameConverter : Converter<Instant, Instant> {
     override fun convert(source: Instant): Instant = source
+}
+
+@WritingConverter
+object KeepDurationTheSameConverter : Converter<Duration, Duration> {
+    override fun convert(source: Duration) = source
+}
+
+@ReadingConverter
+object IntervalToDurationConverter : Converter<Interval, Duration> {
+    override fun convert(source: Interval): Duration {
+        return JSR310Utils.valueToDuration(
+            ValueInterval.from(
+                source.qualifier,
+                source.isNegative,
+                source.leading,
+                source.remaining
+            )
+        ) as Duration
+    }
+
 }

@@ -49,8 +49,8 @@ class ListMembersCommand(private val roleKickService: RoleKickService, private v
         embedHelper.respondTo(event, "List Tracked Members") {
             for ((roleId, roleMembers) in roleIdsToMembers) {
                 val memberMentions = mutableListOf<String>()
-                val timeTilWarn = mutableListOf<String>()
-                val timeTilKick = mutableListOf<String>()
+                val timeTilWarnLines = mutableListOf<String>()
+                val timeTilKickLines = mutableListOf<String>()
 
                 val rule = rules.getValue(roleId)
 
@@ -59,14 +59,21 @@ class ListMembersCommand(private val roleKickService: RoleKickService, private v
 
                     memberMentions.add(mentionUser(member.memberId))
                     val timeTilWarning = rule.timeTilWarning - Duration.between(timeStarted, now)
-                    timeTilWarn.add(timeTilWarning.toAbbreviatedString())
-                    timeTilKick.add((timeTilWarning + rule.timeTilKick).toAbbreviatedString())
+                    val timeTilKick = timeTilWarning + rule.timeTilKick
+                    timeTilWarnLines.add(
+                        if (member.triedWarn) "Warned"
+                        else timeTilWarning.toAbbreviatedString()
+                    )
+                    timeTilKickLines.add(
+                        if (member.triedKick) "Failed to Kick"
+                        else timeTilKick.toAbbreviatedString()
+                    )
                 }
 
                 addField("Role", mentionRole(roleId), false)
                 addField("User", memberMentions.joinToString("\n"), true)
-                addField("Time Til Warning", timeTilWarn.joinToString("\n"), true)
-                addField("Time Til Kick", timeTilKick.joinToString("\n"), true)
+                addField("Time Til Warning", timeTilWarnLines.joinToString("\n"), true)
+                addField("Time Til Kick", timeTilKickLines.joinToString("\n"), true)
             }
         }
     }
