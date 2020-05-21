@@ -34,10 +34,12 @@ import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
 import io.github.thenumberone.discord.rolekickerbot.util.toAbbreviatedString
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
 private const val title = "List Roles"
 
 @Component
+@Priority(0)
 class ListRolesCommand(private val roleKickService: RoleKickService, private val embedHelper: EmbedHelper) :
     MultipleNamesCommand, AdminCommand {
     override val names: Set<String> = setOf("listroles", "listrole")

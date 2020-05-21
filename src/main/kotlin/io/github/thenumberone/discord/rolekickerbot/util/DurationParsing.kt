@@ -26,22 +26,32 @@
 package io.github.thenumberone.discord.rolekickerbot.util
 
 import discord4j.core.spec.EmbedCreateSpec
+import mu.KotlinLogging
 import java.time.Duration
 
+private val logger = KotlinLogging.logger {}
 private const val durationRegexString = """(?x) # turn on comments
     \s* # optional leading whitespace
     (?<num> # match a number
         (?:[+-]\s*)? # leading sign
-        (?:[\d+]) # digits
+        (?:\d+) # digits
     )
     \s* # optional whitespace
     (?<mod>(?:[wdhms]|ms|ns)) # modifiers
 """
 
 private val durationRegex = Regex(durationRegexString)
-private val matchesAll = Regex("(?:$durationRegexString)+")
+private val matchesAll = Regex("(?:$durationRegexString)+\\s*")
 
 fun parseDuration(s: String): Duration? {
+    val result = parseDurationImpl(s)
+    if (result == null) {
+        logger.info { "Failed to parse $s" }
+    }
+    return result
+}
+
+fun parseDurationImpl(s: String): Duration? {
     if (!matchesAll.matches(s)) return null
     val parts = durationRegex.findAll(s)
     var duration = Duration.ZERO

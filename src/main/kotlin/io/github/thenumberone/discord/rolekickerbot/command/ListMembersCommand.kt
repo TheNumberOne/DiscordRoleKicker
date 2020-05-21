@@ -32,8 +32,10 @@ import io.github.thenumberone.discord.rolekickerbot.util.toAbbreviatedString
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
+import javax.annotation.Priority
 
 @Component
+@Priority(0)
 class ListMembersCommand(private val roleKickService: RoleKickService, private val embedHelper: EmbedHelper) :
     MultipleNamesCommand, AdminCommand {
     override val names: Set<String> = setOf("listmembers", "listmember")

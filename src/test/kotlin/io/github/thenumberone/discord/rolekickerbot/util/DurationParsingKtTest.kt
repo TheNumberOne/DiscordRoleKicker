@@ -23,30 +23,25 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.command
+package io.github.thenumberone.discord.rolekickerbot.util
 
-import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.data.PrefixService
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
-import org.springframework.stereotype.Component
-import javax.annotation.Priority
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
+import java.time.Duration
 
-@Component
-@Priority(0)
-class SetPrefixCommand(
-    val prefixRepository: PrefixService,
-    val embedHelper: EmbedHelper
-) : SingleNameCommand, AdminCommand {
-    override val name: String = "setrolekickerprefix"
+internal class DurationParsingKtTest {
+    @Test
+    fun canParseTrailingSpaces() {
+        parseDuration("1m ") shouldBe Duration.ofMinutes(1)
+    }
 
-    override suspend fun execIfPrivileged(event: MessageCreateEvent, commandText: String) {
-        val guildId = event.guildId.orElse(null) ?: return
-        val before = prefixRepository.get(guildId)
-        prefixRepository.set(guildId, commandText)
-        embedHelper.respondTo(event) {
-            setTitle("Set Prefix")
-            addField("Before", before, true)
-            addField("After", commandText, true)
-        }
+    @Test
+    fun canParseOneHour() {
+        parseDuration("1h") shouldBe Duration.ofHours(1)
+    }
+
+    @Test
+    fun canParseTenMinutes() {
+        parseDuration("10m") shouldBe Duration.ofMinutes(10)
     }
 }

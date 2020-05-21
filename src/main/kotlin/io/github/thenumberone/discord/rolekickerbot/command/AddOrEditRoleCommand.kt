@@ -39,11 +39,13 @@ import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Duration
+import javax.annotation.Priority
 
 private const val embedTitle = "Add/Edit Role"
 private val logger = LoggerFactory.getLogger(AddOrEditRoleCommand::class.java)
 
 @Component
+@Priority(0)
 class AddOrEditRoleCommand(
     val embedHelper: EmbedHelper,
     val roleKickService: RoleKickService,

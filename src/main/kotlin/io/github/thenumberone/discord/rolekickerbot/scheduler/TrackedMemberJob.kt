@@ -72,8 +72,12 @@ class TrackedMemberSchedulerImpl(
             )}"
         }
         val newJob = scope.launch(start = CoroutineStart.LAZY) {
-            warnOrKickEventually(gateway, jobData)
-            refresh(gateway)
+            try {
+                warnOrKickEventually(gateway, jobData)
+                refresh(gateway)
+            } catch (e: Exception) {
+                logger.error("failed to warn or kick user ${jobData.memberId}")
+            }
         }
         val oldJob = currentJob.getAndSet(newJob)
         oldJob?.cancel()

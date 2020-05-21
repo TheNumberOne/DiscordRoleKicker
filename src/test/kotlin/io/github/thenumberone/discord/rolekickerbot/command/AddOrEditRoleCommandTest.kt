@@ -105,4 +105,9 @@ internal class AddOrEditRoleCommandTest {
             service.addOrUpdateRule(match { it.roleId == roleId })
         }
     }
+
+//    @Test
+//    fun `thath tes`() {
+//        .editrole test1 1h 10m "gonna get kicked son"
+//    }
 }

@@ -31,10 +31,12 @@ import io.github.thenumberone.discord.rolekickerbot.service.RoleFinderService
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
 private const val title = "Remove Role"
 
 @Component
+@Priority(0)
 class RemoveRoleCommand(
     private val roleFinderService: RoleFinderService,
     private val roleKickService: RoleKickService,

@@ -29,6 +29,7 @@ import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.stereotype.Component
 import java.time.Instant
 
@@ -50,6 +51,6 @@ class EmbedHelper(val self: SelfBotInfo) {
     }
 
     suspend fun send(channel: MessageChannel, title: String? = null, builder: EmbedCreateSpec.() -> Unit) {
-        channel.createEmbed(withTemplate(builder, title))?.awaitFirstOrNull()
+        channel.createEmbed(withTemplate(builder, title)).awaitSingle()
     }
 }

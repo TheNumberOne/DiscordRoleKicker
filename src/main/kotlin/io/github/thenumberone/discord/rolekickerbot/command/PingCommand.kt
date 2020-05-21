@@ -28,8 +28,10 @@ package io.github.thenumberone.discord.rolekickerbot.command
 import discord4j.core.event.domain.message.MessageCreateEvent
 import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
 @Component
+@Priority(0)
 class PingCommand(val embedHelper: EmbedHelper) : SingleNameCommand {
     override val name: String = "ping"
 

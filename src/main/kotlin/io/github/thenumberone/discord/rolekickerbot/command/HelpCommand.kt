@@ -26,27 +26,31 @@
 package io.github.thenumberone.discord.rolekickerbot.command
 
 import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.data.PrefixService
 import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import org.springframework.stereotype.Component
 import javax.annotation.Priority
 
 @Component
-@Priority(0)
-class SetPrefixCommand(
-    val prefixRepository: PrefixService,
-    val embedHelper: EmbedHelper
-) : SingleNameCommand, AdminCommand {
-    override val name: String = "setrolekickerprefix"
+@Priority(Integer.MAX_VALUE)
+class HelpCommand(private val embedHelper: EmbedHelper) : DiscordCommand {
 
-    override suspend fun execIfPrivileged(event: MessageCreateEvent, commandText: String) {
-        val guildId = event.guildId.orElse(null) ?: return
-        val before = prefixRepository.get(guildId)
-        prefixRepository.set(guildId, commandText)
-        embedHelper.respondTo(event) {
-            setTitle("Set Prefix")
-            addField("Before", before, true)
-            addField("After", commandText, true)
+    override suspend fun matches(name: String): Boolean = true
+
+    private val help = """
+        |`.setrolekickerprefix <prefix>` - set the prefix that the bot uses for the server to what you desire.
+        |`.(addrole|editrole) <role name> <X> <Y> [<warning message>]` - adds or updates a role for the bot to watch
+        |`.listrole(s)` - list the roles that are currently being watched
+        |`.removerole <role name>` - removes the role from the list of those that are watched
+        |`.setwarningmessage <role name> <warning message>` - sets the warning messages sent to users
+        |`.listmember(s)` - list the members that are currently being tracked
+    """.trimMargin().lines().map { line -> line.split(" - ") }
+
+
+    override suspend fun exec(event: MessageCreateEvent, commandText: String) {
+        embedHelper.respondTo(event, "Help") {
+            for ((title, description) in help) {
+                addField(title, description, false)
+            }
         }
     }
 }

@@ -32,10 +32,12 @@ import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
 import io.github.thenumberone.discord.rolekickerbot.util.parseArguments
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.stereotype.Component
+import javax.annotation.Priority
 
 private const val title = "Set Warning"
 
 @Component
+@Priority(0)
 class SetWarningMessageCommand(
     private val embedHelper: EmbedHelper,
     private val roleFinderService: RoleFinderService,
