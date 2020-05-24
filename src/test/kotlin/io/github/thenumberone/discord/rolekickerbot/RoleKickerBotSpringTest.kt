@@ -23,5 +23,13 @@
  *
  */
 
-rootProject.name = 'DiscordRoleKicker'
+package io.github.thenumberone.discord.rolekickerbot
 
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.CLASS)
+@SpringBootTest
+@ActiveProfiles("test")
+annotation class RoleKickerBotSpringTest

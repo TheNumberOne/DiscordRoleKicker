@@ -76,7 +76,9 @@ class TrackedMemberSchedulerImpl(
                 warnOrKickEventually(gateway, jobData)
                 refresh(gateway)
             } catch (e: Exception) {
-                logger.error("failed to warn or kick user ${jobData.memberId}")
+                if (e !is CancellationException) {
+                    logger.error(e) { "failed to warn or kick user ${jobData.memberId}" }
+                }
             }
         }
         val oldJob = currentJob.getAndSet(newJob)

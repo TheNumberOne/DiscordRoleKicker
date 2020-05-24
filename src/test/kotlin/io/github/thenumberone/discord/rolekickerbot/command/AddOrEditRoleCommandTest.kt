@@ -27,10 +27,10 @@
 
 package io.github.thenumberone.discord.rolekickerbot.command
 
+import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
-import discord4j.rest.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.service.RoleFinderService
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService

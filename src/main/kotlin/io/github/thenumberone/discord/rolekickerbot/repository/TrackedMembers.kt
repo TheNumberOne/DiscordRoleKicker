@@ -25,7 +25,7 @@
 
 package io.github.thenumberone.discord.rolekickerbot.repository
 
-import discord4j.rest.util.Snowflake
+import discord4j.common.util.Snowflake
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle

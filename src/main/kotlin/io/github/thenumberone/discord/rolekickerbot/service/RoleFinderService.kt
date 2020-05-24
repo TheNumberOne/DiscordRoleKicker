@@ -25,10 +25,10 @@
 
 package io.github.thenumberone.discord.rolekickerbot.service
 
+import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Role
 import discord4j.core.`object`.entity.channel.MessageChannel
-import discord4j.rest.util.Snowflake
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.stereotype.Component
 

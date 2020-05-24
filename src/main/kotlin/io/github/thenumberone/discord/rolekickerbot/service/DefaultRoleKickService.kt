@@ -25,7 +25,7 @@
 
 package io.github.thenumberone.discord.rolekickerbot.service
 
-import discord4j.rest.util.Snowflake
+import discord4j.common.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGateway
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRuleRepository

@@ -25,27 +25,30 @@
 
 package io.github.thenumberone.discord.rolekickerbot.data
 
-import discord4j.rest.util.Snowflake
+import discord4j.common.util.Snowflake
 import io.r2dbc.h2.H2ConnectionConfiguration
 import io.r2dbc.h2.H2ConnectionFactory
 import io.r2dbc.spi.ConnectionFactory
 import org.h2.api.Interval
 import org.h2.util.JSR310Utils
 import org.h2.value.ValueInterval
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
 import org.springframework.core.convert.converter.Converter
-import org.springframework.core.io.ClassPathResource
 import org.springframework.data.convert.ReadingConverter
 import org.springframework.data.convert.WritingConverter
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration
-import org.springframework.data.r2dbc.connectionfactory.init.CompositeDatabasePopulator
 import org.springframework.data.r2dbc.connectionfactory.init.ConnectionFactoryInitializer
-import org.springframework.data.r2dbc.connectionfactory.init.ResourceDatabasePopulator
 import java.time.Duration
 import java.time.Instant
 
-abstract class R2DbcConfiguration : AbstractR2dbcConfiguration() {
+@Configuration
+@EnableConfigurationProperties(R2dbcProperties::class)
+@Import(VersioningDatabasePopulator::class)
+class R2DbcConfiguration(private val props: R2dbcProperties) : AbstractR2dbcConfiguration() {
     override fun getCustomConverters(): MutableList<Any> {
         return mutableListOf(
             SnowflakeToLongConverter,
@@ -58,25 +61,23 @@ abstract class R2DbcConfiguration : AbstractR2dbcConfiguration() {
 
     @Bean
     fun connectionFactoryInitializer(
-        // This is found just fine.
         @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-        factory: ConnectionFactory
+        factory: ConnectionFactory,
+        versioningDatabasePopulator: VersioningDatabasePopulator
     ): ConnectionFactoryInitializer {
-        val init = ConnectionFactoryInitializer()
-        init.setConnectionFactory(factory)
-        val populator = CompositeDatabasePopulator()
-        populator.addPopulators(ResourceDatabasePopulator(ClassPathResource("schema.sql")))
-        init.setDatabasePopulator(populator)
-        return init
+        return ConnectionFactoryInitializer().apply {
+            setConnectionFactory(factory)
+            setDatabasePopulator(versioningDatabasePopulator)
+        }
     }
-}
 
-
-@Configuration
-class ReleaseR2DbcConfiguration : R2DbcConfiguration() {
     @Bean
     override fun connectionFactory(): ConnectionFactory {
-        val config = H2ConnectionConfiguration.builder().file("./bot_state").build()
+        val url = props.url
+        val expectedPrefix = "r2dbc:h2:"
+        require(url.startsWith(expectedPrefix)) { "Database url must be to a reactive h2 database currently." }
+
+        val config = H2ConnectionConfiguration.builder().url(url.removePrefix(expectedPrefix)).build()
         return H2ConnectionFactory(config)
     }
 }

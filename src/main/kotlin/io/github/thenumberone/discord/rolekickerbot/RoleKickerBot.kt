@@ -30,10 +30,9 @@ import org.springframework.boot.runApplication
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 
 @EnableR2dbcRepositories
-@SpringBootApplication()
+@SpringBootApplication
 class RoleKickerBot
 
 fun main(args: Array<String>) {
     runApplication<RoleKickerBot>(*args)
 }
-

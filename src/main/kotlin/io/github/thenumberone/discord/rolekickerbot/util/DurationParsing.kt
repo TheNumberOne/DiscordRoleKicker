@@ -77,6 +77,8 @@ fun Duration.toAbbreviatedString(fineDetail: Boolean = false) = buildString {
         append('-')
     }
     val positive = abs()
+    val showSmolParts = fineDetail || positive < Duration.ofSeconds(1)
+    val showVerySmolParts = fineDetail || (positive < Duration.ofMillis(1))
     if (positive.toDaysPart() >= 7) {
         append(positive.toDaysPart() / 7).append('w')
     }
@@ -92,10 +94,10 @@ fun Duration.toAbbreviatedString(fineDetail: Boolean = false) = buildString {
     if (positive.toSecondsPart() > 0) {
         append(positive.toSecondsPart()).append('s')
     }
-    if (fineDetail && positive.toMillisPart() > 0) {
+    if (showSmolParts && positive.toMillisPart() > 0) {
         append(positive.toMillisPart()).append("ms")
     }
-    if (fineDetail && positive.toNanosPart() % 1000000 > 0) {
+    if (showVerySmolParts && positive.toNanosPart() % 1000000 > 0) {
         append(positive.toNanosPart() % 1000000).append("ns")
     }
     if (isZero) {

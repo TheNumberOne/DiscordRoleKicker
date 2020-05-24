@@ -25,7 +25,8 @@
 
 package io.github.thenumberone.discord.rolekickerbot.repository
 
-import discord4j.rest.util.Snowflake
+import discord4j.common.util.Snowflake
+import io.github.thenumberone.discord.rolekickerbot.RoleKickerBotSpringTest
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRuleRepository
 import io.kotest.matchers.collections.shouldHaveSize
@@ -35,13 +36,14 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import reactor.core.publisher.Hooks
 import java.time.Duration
 
-@SpringBootTest(classes = [R2DbcTestConfiguration::class])
+@RoleKickerBotSpringTest
 class RuleRepositoryTest(
     @Autowired
     val ruleRepository: RoleKickRuleRepository
@@ -54,7 +56,16 @@ class RuleRepositoryTest(
         "Hello world"
     )
 
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun enableDebugHooks() {
+            Hooks.onOperatorDebug()
+        }
+    }
+
     lateinit var withId: RoleKickRule
+
 
     @BeforeEach
     fun insertRule() = runBlocking {

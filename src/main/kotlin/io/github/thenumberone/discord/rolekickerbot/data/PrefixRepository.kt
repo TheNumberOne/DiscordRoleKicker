@@ -25,7 +25,7 @@
 
 package io.github.thenumberone.discord.rolekickerbot.data
 
-import discord4j.rest.util.Snowflake
+import discord4j.common.util.Snowflake
 import org.springframework.data.annotation.Id
 import org.springframework.data.r2dbc.repository.Modifying
 import org.springframework.data.r2dbc.repository.Query

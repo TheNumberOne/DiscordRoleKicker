@@ -35,9 +35,9 @@ import javax.annotation.Priority
 @Priority(Int.MAX_VALUE)
 class BlockTilLogout(
     @ApplicationMono
-    private val application: Mono<*>
+    private val application: Mono<*>?
 ) : CommandLineRunner {
     override fun run(vararg args: String?) {
-        application.block()
+        application?.block()
     }
 }

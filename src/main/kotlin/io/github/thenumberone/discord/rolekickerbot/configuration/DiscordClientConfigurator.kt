@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import reactor.core.publisher.Hooks
+import org.springframework.context.annotation.Profile
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.whenComplete
 import reactor.util.context.Context
@@ -50,10 +50,10 @@ annotation class ApplicationMono
 
 
 @Configuration
+@Profile("!test")
 class DiscordClientConfigurator {
     @Bean
     fun configureDiscordClient(@Value("\${discord.bot.token}") token: String): DiscordClient {
-        Hooks.onOperatorDebug()
         val builder = DiscordClientBuilder.create(token)
         return builder.build()
     }

@@ -23,8 +23,6 @@
  *
  */
 
--- noinspection SqlResolveForFile @ object-type/"SERIAL"
-
 CREATE TABLE IF NOT EXISTS role_kick_rule
 (
     id               SERIAL PRIMARY KEY,
@@ -60,3 +58,8 @@ CREATE INDEX IF NOT EXISTS tracked_member_member_id_index on tracked_member (mem
 CREATE INDEX IF NOT EXISTS tracked_member_guild_id_index on tracked_member (guild_id);
 CREATE INDEX IF NOT EXISTS tracked_member_role_id_index on tracked_member (role_id);
 
+CREATE TABLE IF NOT EXISTS app_properties
+(
+    property_key VARCHAR PRIMARY KEY NOT NULL,
+    value        VARCHAR             NOT NULL
+)
