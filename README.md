@@ -26,6 +26,17 @@ Java must be version 11 or higher.
 java -jar build/libs/DiscordRoleKicker-<version>.jar --discord.bot.token=YourReallyLongDiscordBotTokenHere
 ```
 
+## To run with docker
+
+```shell script
+docker run --env discord.bot.token=<your-bot-token> thenumeralone/role-kicker-bot:1.0.0    
+```
+
+To make it so that it keeps running on restart, run
+```shell script
+docker run --restart=always --env discord.bot.token=<your-bot-token> thenumeralone/role-kicker-bot:1.0.0    
+```
+
 ## Basic Functionality
  - User is assigned a role that the bot listens to.
  - After `<X>` time, the user is warned they will be kicked if they still have the same role as before.

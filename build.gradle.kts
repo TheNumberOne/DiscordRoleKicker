@@ -24,6 +24,7 @@
  */
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
 
 plugins {
     application
@@ -102,4 +103,10 @@ application {
 
 kapt {
     includeCompileClasspath = false
+}
+
+tasks.getByName<BootBuildImage>("bootBuildImage") {
+    isVerboseLogging = true
+    imageName = "thenumeralone/role-kicker-bot:1.0.0"
+    isCleanCache = true
 }
