@@ -81,8 +81,7 @@ class DiscordClientConfigurator {
                 subscribers.map { subscriber ->
                     subscriber
                         .subscribe(gateway)
-                        .subscriberContext(Context.of(DiscordGatewayClientReactorContextKey, gateway))
-                }.whenComplete()
+                }.whenComplete().injectGateway(gateway)
             }
     }
 
@@ -109,4 +108,8 @@ suspend fun <T> injectGateway(gateway: GatewayDiscordClient, f: suspend () -> T)
     val oldContext = coroutineContext[ReactorContext]?.context ?: Context.empty()
     val newContext = oldContext.put(DiscordGatewayClientReactorContextKey, gateway)
     return withContext(coroutineContext + ReactorContext(newContext)) { f() }
+}
+
+fun <T> Mono<T>.injectGateway(gateway: GatewayDiscordClient): Mono<T> {
+    return subscriberContext(Context.of(DiscordGatewayClientReactorContextKey, gateway))
 }

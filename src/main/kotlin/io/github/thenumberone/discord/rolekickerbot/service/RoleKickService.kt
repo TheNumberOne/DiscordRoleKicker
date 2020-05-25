@@ -27,7 +27,7 @@ package io.github.thenumberone.discord.rolekickerbot.service
 
 import discord4j.common.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
-import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMember
+import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
 
 interface RoleKickService {
     suspend fun addRole(rule: RoleKickRule)

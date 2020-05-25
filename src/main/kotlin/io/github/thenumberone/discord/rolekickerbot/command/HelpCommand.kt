@@ -26,7 +26,7 @@
 package io.github.thenumberone.discord.rolekickerbot.command
 
 import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
+import io.github.thenumberone.discord.rolekickerbot.util.EmbedHelper
 import org.springframework.stereotype.Component
 import javax.annotation.Priority
 

@@ -23,22 +23,15 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.command
+package io.github.thenumberone.discord.rolekickerbot.configuration
 
-import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.util.EmbedHelper
-import org.springframework.stereotype.Component
-import javax.annotation.Priority
+import io.github.thenumberone.discord.rolekickerbot.scheduler.TrackedMemberSchedulerImpl
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-@Component
-@Priority(0)
-class PingCommand(val embedHelper: EmbedHelper) : SingleNameCommand {
-    override val name: String = "ping"
-
-    override suspend fun exec(event: MessageCreateEvent, commandText: String) {
-        embedHelper.respondTo(event) {
-            setTitle("Pong")
-            setDescription(commandText)
-        }
-    }
+@Configuration
+class SchedulerConfiguration {
+    @Bean
+    @ApplicationMono
+    fun scheduler(scheduler: TrackedMemberSchedulerImpl) = scheduler.refresher()
 }

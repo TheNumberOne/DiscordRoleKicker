@@ -29,8 +29,8 @@ import discord4j.common.util.Snowflake
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
+import io.github.thenumberone.discord.rolekickerbot.util.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.util.toAbbreviatedString
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.stereotype.Component

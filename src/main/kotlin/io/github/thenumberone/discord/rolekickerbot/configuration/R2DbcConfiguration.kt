@@ -23,7 +23,7 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.data
+package io.github.thenumberone.discord.rolekickerbot.configuration
 
 import discord4j.common.util.Snowflake
 import io.r2dbc.h2.H2ConnectionConfiguration

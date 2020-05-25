@@ -23,16 +23,42 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.data
+package io.github.thenumberone.discord.rolekickerbot.repository
 
 import discord4j.common.util.Snowflake
+import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
 import kotlinx.coroutines.flow.Flow
+import org.springframework.data.r2dbc.repository.Modifying
+import org.springframework.data.r2dbc.repository.Query
+import org.springframework.data.repository.reactive.ReactiveCrudRepository
 
-interface InBugWorkaroundRepository {
+@Suppress("SpringDataRepositoryMethodParametersInspection")
+interface TrackedMemberRepository : ReactiveCrudRepository<TrackedMember, Long>, TrackedMemberCustomRepository,
+    TrackedMemberJobRepository {
 
-    fun findAllByGuildIdAndRoleIdIn(guildId: Snowflake, roleId: Collection<Snowflake>): Flow<RoleKickRule>
+    fun findAllByGuildId(guildId: Snowflake): Flow<TrackedMember>
+    suspend fun deleteAllByGuildIdAndRoleId(guildId: Snowflake, roleId: Snowflake): Int
+    suspend fun deleteAllByGuildId(guildId: Snowflake): Int
+    suspend fun deleteAllByGuildIdAndMemberId(guildId: Snowflake, memberId: Snowflake): Int
 
-    suspend fun deleteAllByGuildIdAndRoleIdNotIn(guildId: Snowflake, roleId: Collection<Snowflake>): Int
+    @Modifying
+    @Query(
+        """
+        UPDATE tracked_member
+        SET tried_warn = TRUE, tried_kick = TRUE
+        WHERE id = :id
+    """
+    )
+    suspend fun markKicked(id: Long): Boolean
 
-    suspend fun deleteAllByRoleIdIn(roleId: Collection<Snowflake>): Int
+    @Modifying
+    @Query(
+        """
+        UPDATE tracked_member
+        SET tried_warn = TRUE
+        WHERE id = :id
+    """
+    )
+    suspend fun markWarned(id: Long): Boolean
 }
+

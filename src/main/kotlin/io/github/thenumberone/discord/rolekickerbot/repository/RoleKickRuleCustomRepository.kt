@@ -23,23 +23,34 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.data
+package io.github.thenumberone.discord.rolekickerbot.repository
 
 import discord4j.common.util.Snowflake
+import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.data.r2dbc.core.DatabaseClient
-import org.springframework.data.relational.core.query.Criteria.where
+import org.springframework.data.relational.core.query.Criteria
 import org.springframework.stereotype.Component
 
+interface RoleKickRuleCustomRepository {
+
+    fun findAllByGuildIdAndRoleIdIn(guildId: Snowflake, roleId: Collection<Snowflake>): Flow<RoleKickRule>
+
+    suspend fun deleteAllByGuildIdAndRoleIdNotIn(guildId: Snowflake, roleId: Collection<Snowflake>): Int
+
+    suspend fun deleteAllByRoleIdIn(roleId: Collection<Snowflake>): Int
+}
+
 @Component
-class InBugWorkaroundRepositoryImpl(private val client: DatabaseClient) : InBugWorkaroundRepository {
+class RoleKickRuleCustomRepositoryImpl(private val client: DatabaseClient) :
+    RoleKickRuleCustomRepository {
     override fun findAllByGuildIdAndRoleIdIn(guildId: Snowflake, roleId: Collection<Snowflake>): Flow<RoleKickRule> {
         return client
             .select()
             .from(RoleKickRule::class.java)
-            .matching(where("guild_id").`is`(guildId).and("role_id").`in`(roleId))
+            .matching(Criteria.where("guild_id").`is`(guildId).and("role_id").`in`(roleId))
             .`as`(RoleKickRule::class.java)
             .all()
             .asFlow()
@@ -49,7 +60,7 @@ class InBugWorkaroundRepositoryImpl(private val client: DatabaseClient) : InBugW
         return client
             .delete()
             .from(RoleKickRule::class.java)
-            .matching(where("guild_id").`is`(guildId).and("role_id").notIn(roleId))
+            .matching(Criteria.where("guild_id").`is`(guildId).and("role_id").notIn(roleId))
             .fetch()
             .rowsUpdated()
             .awaitSingle()
@@ -59,7 +70,7 @@ class InBugWorkaroundRepositoryImpl(private val client: DatabaseClient) : InBugW
         return client
             .delete()
             .from(RoleKickRule::class.java)
-            .matching(where("role_id").`in`(roleId))
+            .matching(Criteria.where("role_id").`in`(roleId))
             .fetch()
             .rowsUpdated()
             .awaitSingle()

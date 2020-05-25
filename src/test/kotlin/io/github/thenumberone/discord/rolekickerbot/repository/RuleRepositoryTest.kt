@@ -28,7 +28,6 @@ package io.github.thenumberone.discord.rolekickerbot.repository
 import discord4j.common.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.RoleKickerBotSpringTest
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
-import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRuleRepository
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull

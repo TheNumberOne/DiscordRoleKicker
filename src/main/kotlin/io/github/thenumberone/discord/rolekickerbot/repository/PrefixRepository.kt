@@ -23,7 +23,7 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.data
+package io.github.thenumberone.discord.rolekickerbot.repository
 
 import discord4j.common.util.Snowflake
 import org.springframework.data.annotation.Id

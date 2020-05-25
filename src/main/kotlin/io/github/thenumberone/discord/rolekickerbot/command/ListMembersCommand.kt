@@ -26,8 +26,8 @@
 package io.github.thenumberone.discord.rolekickerbot.command
 
 import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
+import io.github.thenumberone.discord.rolekickerbot.util.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.util.toAbbreviatedString
 import org.springframework.stereotype.Component
 import java.time.Duration

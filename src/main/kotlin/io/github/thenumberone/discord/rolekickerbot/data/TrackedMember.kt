@@ -23,22 +23,36 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.command
+package io.github.thenumberone.discord.rolekickerbot.data
 
-import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.util.EmbedHelper
-import org.springframework.stereotype.Component
-import javax.annotation.Priority
+import discord4j.common.util.Snowflake
+import org.springframework.data.annotation.Id
+import org.springframework.data.relational.core.mapping.Table
+import java.time.Instant
 
-@Component
-@Priority(0)
-class PingCommand(val embedHelper: EmbedHelper) : SingleNameCommand {
-    override val name: String = "ping"
+@Table
+data class TrackedMember(
+    @Id val id: Long?,
+    val memberId: Snowflake,
+    val guildId: Snowflake,
+    val roleId: Snowflake,
+    val startedTracking: Instant,
+    val triedWarn: Boolean = false,
+    val triedKick: Boolean = false
+) {
+    constructor(memberId: Snowflake, guildId: Snowflake, roleId: Snowflake, startedTracking: Instant) : this(
+        null,
+        memberId,
+        guildId,
+        roleId,
+        startedTracking
+    )
+}
 
-    override suspend fun exec(event: MessageCreateEvent, commandText: String) {
-        embedHelper.respondTo(event) {
-            setTitle("Pong")
-            setDescription(commandText)
-        }
-    }
+interface JustRoleId {
+    val roleId: Snowflake
+}
+
+interface JustMemberId {
+    val memberId: Snowflake
 }

@@ -28,9 +28,9 @@ package io.github.thenumberone.discord.rolekickerbot.service
 import discord4j.common.util.Snowflake
 import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGateway
 import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
-import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRuleRepository
-import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMember
-import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMembersRepository
+import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
+import io.github.thenumberone.discord.rolekickerbot.repository.RoleKickRuleRepository
+import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMemberRepository
 import io.github.thenumberone.discord.rolekickerbot.scheduler.TrackedMemberScheduler
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService.AddedOrUpdated
 import kotlinx.coroutines.flow.toList
@@ -47,7 +47,7 @@ private val logger = LoggerFactory.getLogger(DefaultRoleKickService::class.java)
 class DefaultRoleKickService(
     private val roleKickRuleRepository: RoleKickRuleRepository,
     private val transaction: TransactionalOperator,
-    private val trackedMembersRepository: TrackedMembersRepository,
+    private val trackedMembersRepository: TrackedMemberRepository,
     private val scheduler: TrackedMemberScheduler
 ) : RoleKickService {
     override suspend fun addRole(rule: RoleKickRule) {

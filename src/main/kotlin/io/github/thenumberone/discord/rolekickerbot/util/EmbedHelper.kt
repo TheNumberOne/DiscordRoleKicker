@@ -23,28 +23,34 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.service
+package io.github.thenumberone.discord.rolekickerbot.util
 
-import discord4j.core.`object`.entity.Member
-import discord4j.core.`object`.entity.User
-import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGateway
+import discord4j.core.`object`.entity.channel.MessageChannel
+import discord4j.core.event.domain.message.MessageCreateEvent
+import discord4j.core.spec.EmbedCreateSpec
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.stereotype.Component
+import java.time.Instant
 
 @Component
-class SelfBotInfo {
-    suspend fun getBotName(): String {
-        return getUser().username
+class EmbedHelper(val self: SelfBotInfo) {
+    suspend fun withTemplate(builder: EmbedCreateSpec.() -> Unit, title: String? = null): EmbedCreateSpec.() -> Unit {
+        val name = self.getBotName()
+        val imgUrl = self.getImgUrl()
+        return {
+            setAuthor(name, null, imgUrl)
+            setTimestamp(Instant.now())
+            if (title != null) setTitle(title)
+            builder()
+        }
     }
 
-    suspend fun getUser(): User = getCurrentGateway().self.awaitSingle()
-
-    suspend fun getImgUrl(): String {
-        return getUser().avatarUrl
+    suspend fun respondTo(event: MessageCreateEvent, title: String? = null, builder: EmbedCreateSpec.() -> Unit) {
+        send(event.message.channel.awaitFirstOrNull() ?: return, title, builder)
     }
 
-    suspend fun canBan(user: Member): Boolean {
-        val selfUser = user.guild.awaitSingle().selfMember.awaitSingle()
-        return selfUser.isHigher(user).awaitSingle()
+    suspend fun send(channel: MessageChannel, title: String? = null, builder: EmbedCreateSpec.() -> Unit) {
+        channel.createEmbed(withTemplate(builder, title)).awaitSingle()
     }
 }

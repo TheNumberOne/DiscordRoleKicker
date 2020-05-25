@@ -27,7 +27,7 @@ package io.github.thenumberone.discord.rolekickerbot.listeners
 
 import discord4j.core.event.domain.message.MessageCreateEvent
 import io.github.thenumberone.discord.rolekickerbot.command.DiscordCommand
-import io.github.thenumberone.discord.rolekickerbot.data.PrefixService
+import io.github.thenumberone.discord.rolekickerbot.repository.PrefixService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component

@@ -23,7 +23,7 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.data
+package io.github.thenumberone.discord.rolekickerbot.configuration
 
 import io.r2dbc.spi.Connection
 import org.springframework.boot.context.properties.ConfigurationProperties

@@ -26,9 +26,9 @@
 package io.github.thenumberone.discord.rolekickerbot.command
 
 import discord4j.core.event.domain.message.MessageCreateEvent
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.service.RoleFinderService
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
+import io.github.thenumberone.discord.rolekickerbot.util.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.util.parseArguments
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.stereotype.Component

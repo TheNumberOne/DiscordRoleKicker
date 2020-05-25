@@ -31,9 +31,9 @@ import discord4j.common.util.Snowflake
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.service.RoleFinderService
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService
+import io.github.thenumberone.discord.rolekickerbot.util.EmbedHelper
 import io.mockk.*
 import io.mockk.junit5.MockKExtension
 import kotlinx.coroutines.runBlocking

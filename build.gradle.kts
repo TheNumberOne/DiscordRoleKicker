@@ -99,3 +99,7 @@ application {
     mainClassName = "io.github.thenumberone.discord.rolekickerbot.RoleKickerBotKt"
     applicationName = "role_kicker_bot"
 }
+
+kapt {
+    includeCompileClasspath = false
+}

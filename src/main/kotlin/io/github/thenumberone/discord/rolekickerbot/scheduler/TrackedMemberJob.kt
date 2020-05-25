@@ -28,19 +28,20 @@ package io.github.thenumberone.discord.rolekickerbot.scheduler
 import discord4j.core.GatewayDiscordClient
 import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGateway
 import io.github.thenumberone.discord.rolekickerbot.configuration.injectGateway
-import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMemberJob
-import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMembersRepository
-import io.github.thenumberone.discord.rolekickerbot.service.EmbedHelper
-import io.github.thenumberone.discord.rolekickerbot.service.SelfBotInfo
-import kotlinx.coroutines.*
+import io.github.thenumberone.discord.rolekickerbot.data.TrackedMemberJob
+import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMemberRepository
+import io.github.thenumberone.discord.rolekickerbot.util.EmbedHelper
+import io.github.thenumberone.discord.rolekickerbot.util.SelfBotInfo
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.ofType
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.concurrent.atomic.AtomicReference
 
 interface TrackedMemberScheduler {
     suspend fun refresh()
@@ -48,42 +49,36 @@ interface TrackedMemberScheduler {
 
 private val logger = KotlinLogging.logger {}
 
+private sealed class Result {
+    class Refresh(val gateway: GatewayDiscordClient) : Result()
+    object NoJob : Result()
+}
+
 @Component
 class TrackedMemberSchedulerImpl(
-    private val trackedMembersRepository: TrackedMembersRepository,
+    private val trackedMembersRepository: TrackedMemberRepository,
     private val embedHelper: EmbedHelper,
     private val selfBotInfo: SelfBotInfo
 ) : TrackedMemberScheduler {
-    private var currentJob = AtomicReference<Job>()
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scheduler = SingleJobScheduler<Result>()
 
     override suspend fun refresh() {
-        refresh(getCurrentGateway())
+        val gateway = getCurrentGateway()
+        scheduler.launch { refresh(gateway) }
     }
 
-    suspend fun refresh(gateway: GatewayDiscordClient) {
+    private suspend fun refresh(gateway: GatewayDiscordClient): Result {
         logger.info("Scanning for next user")
         val jobData = getJobData()
-        jobData ?: return
+        jobData ?: return Result.NoJob
         logger.info {
             "Next user to ${if (jobData.toWarn) "warn" else "kick"} will be user ${jobData.memberId} at ${LocalDateTime.ofInstant(
                 jobData.timeTo,
                 ZoneId.systemDefault()
             )}"
         }
-        val newJob = scope.launch(start = CoroutineStart.LAZY) {
-            try {
-                warnOrKickEventually(gateway, jobData)
-                refresh(gateway)
-            } catch (e: Exception) {
-                if (e !is CancellationException) {
-                    logger.error(e) { "failed to warn or kick user ${jobData.memberId}" }
-                }
-            }
-        }
-        val oldJob = currentJob.getAndSet(newJob)
-        oldJob?.cancel()
-        newJob.start()
+        warnOrKickEventually(gateway, jobData)
+        return Result.Refresh(gateway)
     }
 
     private suspend fun getJobData(): TrackedMemberJob? {
@@ -124,5 +119,20 @@ class TrackedMemberSchedulerImpl(
         }
         trackedMembersRepository.markWarned(trackedMember.trackedMemberId)
         logger.info { "Warned user ${trackedMember.memberId}" }
+    }
+
+    fun refresher(): Mono<*> {
+        return scheduler.jobResults
+            .doOnNext {
+                if (it is JobResult.Failed) {
+                    logger.error(it.error) { "error while trying to warn/kick users" }
+                }
+            }
+            .ofType<JobResult.Successful<Result>>()
+            .map { it.result }
+            .ofType<Result.Refresh>()
+            .map { it.gateway }
+            .doOnNext { gateway -> scheduler.launch { refresh(gateway) } }
+            .then()
     }
 }

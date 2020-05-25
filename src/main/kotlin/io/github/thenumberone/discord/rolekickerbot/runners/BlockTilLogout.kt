@@ -26,18 +26,30 @@
 package io.github.thenumberone.discord.rolekickerbot.runners
 
 import io.github.thenumberone.discord.rolekickerbot.configuration.ApplicationMono
+import mu.KotlinLogging
 import org.springframework.boot.CommandLineRunner
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 import javax.annotation.Priority
+
+private val logger = KotlinLogging.logger {}
 
 @Component
 @Priority(Int.MAX_VALUE)
+@Profile("!test")
 class BlockTilLogout(
     @ApplicationMono
-    private val application: Mono<*>?
+    private val application: List<Mono<*>>
 ) : CommandLineRunner {
     override fun run(vararg args: String?) {
-        application?.block()
+        Mono.`when`(application.map { appMono ->
+            appMono.onErrorResume {
+                logger.error(it) { "Error in application mono" }
+                Mono.empty()
+            }
+        }).subscribeOn(Schedulers.parallel())
+            .block()
     }
 }

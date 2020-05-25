@@ -23,9 +23,10 @@
  *
  */
 
-package io.github.thenumberone.discord.rolekickerbot.data
+package io.github.thenumberone.discord.rolekickerbot.repository
 
 import discord4j.common.util.Snowflake
+import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import kotlinx.coroutines.flow.Flow
 import org.springframework.data.r2dbc.repository.Modifying
 import org.springframework.data.r2dbc.repository.Query
@@ -34,7 +35,8 @@ import java.time.Duration
 
 // Intellij's help isn't helpful for some methods.
 @Suppress("SpringDataRepositoryMethodParametersInspection")
-interface RoleKickRuleRepository : ReactiveCrudRepository<RoleKickRule, Long>, InBugWorkaroundRepository {
+interface RoleKickRuleRepository : ReactiveCrudRepository<RoleKickRule, Long>,
+    RoleKickRuleCustomRepository {
     @Modifying
     @Query(
         """
