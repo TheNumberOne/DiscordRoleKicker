@@ -51,7 +51,7 @@ class DiscordCommandListener(
         if (!content.startsWith(prefix)) {
             return
         }
-        val commandText = content.substring(prefix.length)
+        val commandText = content.substring(prefix.length).trim()
         val parts = commandText.split(' ', limit = 2)
         val commandName = if (parts.isNotEmpty()) parts[0] else ""
         val commandArguments = if (parts.size >= 2) parts[1] else ""

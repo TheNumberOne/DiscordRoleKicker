@@ -46,7 +46,7 @@ class RemoveRoleCommand(
         val guild = event.guild.awaitFirstOrNull() ?: return
         val channel = event.message.channel.awaitFirstOrNull() ?: return
         val role = roleFinderService.findAndValidateRole(guild, commandText, channel, title) ?: return
-        if (roleKickService.removeRole(guild.id, role.id)) {
+        if (roleKickService.removeRule(guild.id, role.id)) {
             embedHelper.respondTo(event, title) {
                 setDescription("Removed role ${role.mention}.")
             }

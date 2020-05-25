@@ -68,10 +68,10 @@ class TrackedMemberSchedulerImpl(
     }
 
     private suspend fun refresh(gateway: GatewayDiscordClient): Result {
-        logger.info("Scanning for next user")
+        logger.debug("Scanning for next user")
         val jobData = getJobData()
         jobData ?: return Result.NoJob
-        logger.info {
+        logger.debug {
             "Next user to ${if (jobData.toWarn) "warn" else "kick"} will be user ${jobData.memberId} at ${LocalDateTime.ofInstant(
                 jobData.timeTo,
                 ZoneId.systemDefault()
@@ -96,20 +96,20 @@ class TrackedMemberSchedulerImpl(
     }
 
     private suspend fun kick(gateway: GatewayDiscordClient, trackedMember: TrackedMemberJob) {
-        logger.info { "Attempting to kick user ${trackedMember.memberId}" }
+        logger.debug { "Attempting to kick user ${trackedMember.memberId}" }
         val guild = gateway.getGuildById(trackedMember.guildId).awaitSingle()
         val user = guild.getMemberById(trackedMember.memberId).awaitSingle()
         if (selfBotInfo.canBan(user)) {
             guild.kick(trackedMember.memberId).awaitSingle()
             logger.info { "Kicked user ${trackedMember.memberId}" }
         } else {
-            logger.info { "Can't kick user ${trackedMember.memberId}" }
+            logger.info { "Failed to kick user ${trackedMember.memberId}" }
         }
         trackedMembersRepository.markKicked(trackedMember.trackedMemberId)
     }
 
     suspend fun warn(gateway: GatewayDiscordClient, trackedMember: TrackedMemberJob) {
-        logger.info { "Attempting to warn user ${trackedMember.memberId}" }
+        logger.debug { "Attempting to warn user ${trackedMember.memberId}" }
         val member = gateway.getMemberById(trackedMember.guildId, trackedMember.memberId).awaitSingle()
         val channel = member.privateChannel.awaitSingle()
         injectGateway(gateway) {

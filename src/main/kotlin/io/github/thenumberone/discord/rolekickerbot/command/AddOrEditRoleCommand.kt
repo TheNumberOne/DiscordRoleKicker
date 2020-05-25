@@ -78,8 +78,6 @@ class AddOrEditRoleCommand(
         val rule = RoleKickRule(guild.id, role.id, warningTime, kickTime, warningMessage)
         val addOrUpdated = roleKickService.addOrUpdateRule(rule)
 
-        logger.info("Added or updated role")
-
         embedHelper.respondTo(event, embedTitle) {
             when (addOrUpdated) {
                 Added -> setDescription("Added role kicker rule")

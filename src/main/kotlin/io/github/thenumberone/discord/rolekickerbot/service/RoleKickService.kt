@@ -30,8 +30,8 @@ import io.github.thenumberone.discord.rolekickerbot.data.RoleKickRule
 import io.github.thenumberone.discord.rolekickerbot.data.TrackedMember
 
 interface RoleKickService {
-    suspend fun addRole(rule: RoleKickRule)
-    suspend fun updateRole(rule: RoleKickRule)
+    suspend fun addRule(rule: RoleKickRule)
+    suspend fun updateRule(rule: RoleKickRule)
     enum class AddedOrUpdated { Added, Updated }
 
     suspend fun addOrUpdateRule(rule: RoleKickRule): AddedOrUpdated
@@ -39,7 +39,7 @@ interface RoleKickService {
     /**
      * @return true if the role was removed. False if the role was not being tracked.
      */
-    suspend fun removeRole(guild: Snowflake, roleId: Snowflake): Boolean
+    suspend fun removeRule(guild: Snowflake, roleId: Snowflake): Boolean
     suspend fun removeServer(guildId: Snowflake)
     suspend fun getRules(guildId: Snowflake): List<RoleKickRule>
     suspend fun syncGuild(
@@ -52,5 +52,5 @@ interface RoleKickService {
     suspend fun removeMember(guildId: Snowflake, memberId: Snowflake)
     suspend fun updateMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>)
     suspend fun getTrackedMembers(guildId: Snowflake): List<TrackedMember>
-    suspend fun updateWarningMessage(id: Snowflake, warning: String)
+    suspend fun updateWarningMessage(roleId: Snowflake, warning: String)
 }

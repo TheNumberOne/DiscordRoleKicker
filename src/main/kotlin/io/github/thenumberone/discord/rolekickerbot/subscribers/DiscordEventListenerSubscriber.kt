@@ -45,14 +45,14 @@ class DiscordEventListenerSubscriber(
 
     override fun subscribe(gateway: GatewayDiscordClient): Mono<*> {
         return mono {
-            logger.info { "Registering event listeners" }
+            logger.debug { "Registering event listeners" }
             val myTypes = listeners.groupBy { getEventType(it) }
             myTypes.map { (eventType, eventListeners) ->
                 gateway.on(eventType).flatMap { event ->
                     mono {
                         for (eventListener in eventListeners) {
                             try {
-                                logger.info("Processing event $eventType for $eventListener")
+                                logger.debug("Processing event $eventType for $eventListener")
                                 @Suppress("UNCHECKED_CAST")
                                 (eventListener as DiscordEventListener<Event>).on(event)
                                 logger.debug("Processed event $eventType for $eventListener")
@@ -63,6 +63,7 @@ class DiscordEventListenerSubscriber(
                     }
                 }
             }.whenComplete().awaitFirstOrNull()
+            logger.debug { "Registered event listeners" }
         }
     }
 }

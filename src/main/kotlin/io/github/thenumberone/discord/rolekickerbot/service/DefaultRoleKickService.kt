@@ -35,13 +35,13 @@ import io.github.thenumberone.discord.rolekickerbot.scheduler.TrackedMemberSched
 import io.github.thenumberone.discord.rolekickerbot.service.RoleKickService.AddedOrUpdated
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.awaitSingle
-import org.slf4j.LoggerFactory
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import org.springframework.transaction.reactive.TransactionalOperator
 import org.springframework.transaction.reactive.executeAndAwait
 import java.time.Instant
 
-private val logger = LoggerFactory.getLogger(DefaultRoleKickService::class.java)
+private val logger = KotlinLogging.logger {}
 
 @Service
 class DefaultRoleKickService(
@@ -50,7 +50,7 @@ class DefaultRoleKickService(
     private val trackedMembersRepository: TrackedMemberRepository,
     private val scheduler: TrackedMemberScheduler
 ) : RoleKickService {
-    override suspend fun addRole(rule: RoleKickRule) {
+    override suspend fun addRule(rule: RoleKickRule) {
         addRuleWithoutScheduler(rule)
         scheduler.refresh()
     }
@@ -62,28 +62,30 @@ class DefaultRoleKickService(
             val guildMembers = getCurrentGateway().requestMembers(rule.guildId).collectList().awaitSingle()
             val matchingMembers = guildMembers.filter { rule.roleId in it.roleIds }.map { it.id }.toSet()
             trackedMembersRepository.syncRole(rule.guildId, rule.roleId, matchingMembers, Instant.now())
+            logger.info { "Added rule $rule" }
         }
     }
 
     private suspend fun updateRuleWithoutScheduler(rule: RoleKickRule) {
         transaction.executeAndAwait {
             if (!roleKickRuleRepository.updateRuleTimes(rule.roleId, rule.timeTilWarning, rule.timeTilKick)) {
-                require(false) { "Must update exist role!" }
+                require(false) { "Must update existing role!" }
             } else {
-                logger.info("Updated rule")
+                logger.info { "Updated rule $rule" }
             }
         }
     }
 
-    override suspend fun updateRole(rule: RoleKickRule) {
+    override suspend fun updateRule(rule: RoleKickRule) {
         updateRuleWithoutScheduler(rule)
         scheduler.refresh()
     }
 
-    override suspend fun removeRole(guild: Snowflake, roleId: Snowflake): Boolean {
+    override suspend fun removeRule(guild: Snowflake, roleId: Snowflake): Boolean {
         val removed = transaction.executeAndAwait {
             if (roleKickRuleRepository.deleteByRoleId(roleId)) {
                 trackedMembersRepository.deleteAllByGuildIdAndRoleId(guild, roleId)
+                logger.info { "Removed role $roleId" }
                 true
             } else {
                 false
@@ -101,6 +103,7 @@ class DefaultRoleKickService(
             trackedMembersRepository.deleteAllByGuildId(guildId)
         }
         scheduler.refresh()
+        logger.info { "Removed guild $guildId" }
     }
 
     override suspend fun addOrUpdateRule(rule: RoleKickRule): AddedOrUpdated {
@@ -139,6 +142,7 @@ class DefaultRoleKickService(
             trackedMembersRepository.syncGuild(guildId, matchingRules, Instant.now())
         } ?: error("Problem syncing guild")
         scheduler.refresh()
+        logger.info { "Synchronized guild $guildId" }
     }
 
     override suspend fun scanMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>) {
@@ -151,6 +155,7 @@ class DefaultRoleKickService(
             trackedMembersRepository.syncMember(guildId, memberId, rules, Instant.now())
         }
         scheduler.refresh()
+        logger.info { "Scanned member $memberId in guild $guildId" }
     }
 
     override suspend fun removeMember(guildId: Snowflake, memberId: Snowflake) {
@@ -158,6 +163,7 @@ class DefaultRoleKickService(
             trackedMembersRepository.deleteAllByGuildIdAndMemberId(guildId, memberId)
         }
         scheduler.refresh()
+        logger.info { "Removed member $memberId from guild $guildId" }
     }
 
     override suspend fun updateMember(guildId: Snowflake, memberId: Snowflake, roleIds: Set<Snowflake>) {
@@ -165,13 +171,15 @@ class DefaultRoleKickService(
             scanMember(guildId, memberId, roleIds)
         }
         scheduler.refresh()
+        logger.info { "Scanned member $memberId in guild $guildId" }
     }
 
-    override suspend fun updateWarningMessage(id: Snowflake, warning: String) {
+    override suspend fun updateWarningMessage(roleId: Snowflake, warning: String) {
         transaction.executeAndAwait {
-            roleKickRuleRepository.updateWarningMessage(id, warning)
+            roleKickRuleRepository.updateWarningMessage(roleId, warning)
         }
         scheduler.refresh()
+        logger.info { "Updated warning message for $roleId to $warning" }
     }
 
     override suspend fun getTrackedMembers(guildId: Snowflake): List<TrackedMember> {

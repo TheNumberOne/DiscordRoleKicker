@@ -32,6 +32,6 @@ import org.springframework.stereotype.Component
 @Component
 class RoleDeleteListener(private val roleKickService: RoleKickService) : DiscordEventListener<RoleDeleteEvent> {
     override suspend fun on(event: RoleDeleteEvent) {
-        roleKickService.removeRole(event.guildId, event.roleId)
+        roleKickService.removeRule(event.guildId, event.roleId)
     }
 }
