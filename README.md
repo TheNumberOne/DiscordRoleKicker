@@ -2,9 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/TheNumberOne/DiscordRoleKicker.svg?style=svg)](https://circleci.com/gh/TheNumberOne/DiscordRoleKicker)
 
-(Note that this bot hasn't been implemented yet and is currently in the development process.)
-
-Current version: 0.0.1-SNAPSHOT
+Current version: `1.0.0`
 
 ## To build/compile
 
