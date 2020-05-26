@@ -171,7 +171,6 @@ class DefaultRoleKickService(
             scanMember(guildId, memberId, roleIds)
         }
         scheduler.refresh()
-        logger.info { "Scanned member $memberId in guild $guildId" }
     }
 
     override suspend fun updateWarningMessage(roleId: Snowflake, warning: String) {
