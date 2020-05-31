@@ -32,9 +32,8 @@ import javax.annotation.Priority
 
 @Component
 @Priority(Integer.MAX_VALUE)
-class HelpCommand(private val embedHelper: EmbedHelper) : DiscordCommand {
-
-    override suspend fun matches(name: String): Boolean = true
+class HelpCommand(private val embedHelper: EmbedHelper) : MultipleNamesCommand, AdminCommand {
+    override val names: Set<String> = setOf("h", "help")
 
     private val help = """
         |`.setrolekickerprefix <prefix>` - set the prefix that the bot uses for the server to what you desire.
@@ -45,8 +44,7 @@ class HelpCommand(private val embedHelper: EmbedHelper) : DiscordCommand {
         |`.listmember(s)` - list the members that are currently being tracked
     """.trimMargin().lines().map { line -> line.split(" - ") }
 
-
-    override suspend fun exec(event: MessageCreateEvent, commandText: String) {
+    override suspend fun execIfPrivileged(event: MessageCreateEvent, commandText: String) {
         embedHelper.respondTo(event, "Help") {
             for ((title, description) in help) {
                 addField(title, description, false)

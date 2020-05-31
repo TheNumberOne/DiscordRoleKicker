@@ -37,7 +37,7 @@ plugins {
 }
 
 group = "io.github.thenumberone"
-version = "1.0.0"
+version = "1.1.0"
 java.sourceCompatibility = JavaVersion.VERSION_11
 java.targetCompatibility = JavaVersion.VERSION_11
 
@@ -107,6 +107,6 @@ kapt {
 
 tasks.getByName<BootBuildImage>("bootBuildImage") {
     isVerboseLogging = true
-    imageName = "thenumeralone/role-kicker-bot:1.0.0"
+    imageName = "thenumeralone/role-kicker-bot:$version"
     isCleanCache = true
 }

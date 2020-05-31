@@ -28,6 +28,7 @@ package io.github.thenumberone.discord.rolekickerbot.util
 import discord4j.core.`object`.entity.channel.MessageChannel
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.spec.EmbedCreateSpec
+import discord4j.rest.util.Color
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.stereotype.Component
@@ -39,6 +40,7 @@ class EmbedHelper(val self: SelfBotInfo) {
         val name = self.getBotName()
         val imgUrl = self.getImgUrl()
         return {
+            setColor(Color.of(255, 255, 254))
             setAuthor(name, null, imgUrl)
             setTimestamp(Instant.now())
             if (title != null) setTitle(title)
