@@ -32,7 +32,7 @@ java -jar build/libs/DiscordRoleKicker-<version>.jar --discord.bot.token=YourRea
 
 This command will start up the bot with some general default settings and so that it will restart as needed.
 ```shell script
-docker run --restart=always --env discord.bot.token=<your-bot-token> --memory=250m --name=<container-name> thenumeralone/role-kicker-bot:1.0.0    
+docker run --restart=always --env discord.bot.token=<your-bot-token> --memory=250m --name=<container-name> thenumeralone/role-kicker-bot:<version>    
 ```
 
 To upgrade the bot running within an existing container, run
