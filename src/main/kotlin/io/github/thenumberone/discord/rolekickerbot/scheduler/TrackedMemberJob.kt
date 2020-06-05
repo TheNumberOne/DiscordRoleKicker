@@ -33,7 +33,7 @@ import io.github.thenumberone.discord.rolekickerbot.repository.TrackedMemberRepo
 import io.github.thenumberone.discord.rolekickerbot.util.EmbedHelper
 import io.github.thenumberone.discord.rolekickerbot.util.SelfBotInfo
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import mu.KotlinLogging
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -97,10 +97,12 @@ class TrackedMemberSchedulerImpl(
 
     private suspend fun kick(gateway: GatewayDiscordClient, trackedMember: TrackedMemberJob) {
         logger.debug { "Attempting to kick user ${trackedMember.memberId}" }
-        val guild = gateway.getGuildById(trackedMember.guildId).awaitSingle()
-        val user = guild.getMemberById(trackedMember.memberId).awaitSingle()
+        val guild = gateway.getGuildById(trackedMember.guildId).awaitFirstOrNull()
+            ?: error("Missing guild ${trackedMember.guildId} for ${trackedMember.memberId}")
+        val user = guild.getMemberById(trackedMember.memberId).awaitFirstOrNull()
+            ?: error("Can't find member ${trackedMember.memberId} of guild ${guild.id}")
         if (selfBotInfo.canBan(user)) {
-            guild.kick(trackedMember.memberId).awaitSingle()
+            guild.kick(trackedMember.memberId).awaitFirstOrNull()
             logger.info { "Kicked user ${trackedMember.memberId}" }
         } else {
             logger.info { "Failed to kick user ${trackedMember.memberId}" }
@@ -110,15 +112,21 @@ class TrackedMemberSchedulerImpl(
 
     suspend fun warn(gateway: GatewayDiscordClient, trackedMember: TrackedMemberJob) {
         logger.debug { "Attempting to warn user ${trackedMember.memberId}" }
-        val member = gateway.getMemberById(trackedMember.guildId, trackedMember.memberId).awaitSingle()
-        val channel = member.privateChannel.awaitSingle()
-        injectGateway(gateway) {
-            embedHelper.send(channel, "Warning") {
-                setDescription(trackedMember.warningMessage)
+        val member = gateway.getMemberById(trackedMember.guildId, trackedMember.memberId).awaitFirstOrNull()
+            ?: error("Can't find member ${trackedMember.memberId} of guild ${trackedMember.guildId}")
+        val channel = member.privateChannel.awaitFirstOrNull()
+            ?: error("Couldn't find the private channel of ${member.id}.")
+        if (member.isBot) {
+            logger.info { "Failed to warn bot ${member.id} because they are a bot." }
+        } else {
+            injectGateway(gateway) {
+                embedHelper.send(channel, "Warning") {
+                    setDescription(trackedMember.warningMessage)
+                }
             }
+            logger.info { "Warned user ${trackedMember.memberId}" }
         }
         trackedMembersRepository.markWarned(trackedMember.trackedMemberId)
-        logger.info { "Warned user ${trackedMember.memberId}" }
     }
 
     fun refresher(): Mono<*> {

@@ -37,7 +37,7 @@ plugins {
 }
 
 group = "io.github.thenumberone"
-version = "1.1.0"
+version = "1.1.1"
 java.sourceCompatibility = JavaVersion.VERSION_11
 java.targetCompatibility = JavaVersion.VERSION_11
 
@@ -76,8 +76,7 @@ dependencies {
     }
 
     runtimeOnly("com.h2database:h2")
-    implementation("com.github.TheNumberOne:r2dbc-h2:0.8.x-SNAPSHOT")
-//    implementation("io.r2dbc:r2dbc-h2:0.8.3.RELEASE")
+    implementation("io.r2dbc:r2dbc-h2:0.8.4.RELEASE")
 
     testImplementation("io.mockk:mockk:1.10.0")
     testImplementation("com.ninja-squad:springmockk:2.0.1")
