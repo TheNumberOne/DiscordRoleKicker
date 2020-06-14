@@ -40,7 +40,7 @@ import java.time.Duration
 import java.time.Instant
 import javax.annotation.Priority
 
-private const val pageCutoff = 1
+private const val pageCutoff = 20
 private const val title = "List Tracked Members"
 
 @Component

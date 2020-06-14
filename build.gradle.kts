@@ -24,7 +24,6 @@
  */
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
 
 plugins {
     application
@@ -34,6 +33,7 @@ plugins {
     kotlin("jvm") version "1.3.71"
     kotlin("plugin.spring") version "1.3.71"
     kotlin("kapt") version "1.3.72"
+    id("com.google.cloud.tools.jib") version "2.4.0"
 }
 
 group = "io.github.thenumberone"
@@ -102,10 +102,4 @@ application {
 
 kapt {
     includeCompileClasspath = false
-}
-
-tasks.getByName<BootBuildImage>("bootBuildImage") {
-    isVerboseLogging = true
-    imageName = "thenumeralone/role-kicker-bot:$version"
-    isCleanCache = true
 }
