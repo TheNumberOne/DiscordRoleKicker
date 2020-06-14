@@ -37,7 +37,7 @@ private val logger = KotlinLogging.logger {}
 class ApplicationInformationPrinter :
     DiscordGatewaySubscriber {
     override fun subscribe(gateway: GatewayDiscordClient): Mono<*> {
-        val permissions = 3074
+        val permissions = 11330
         val discordAuthUrl = "https://discord.com/api/oauth2/authorize"
         val scope = "bot"
         return gateway.applicationInfo.map { info ->

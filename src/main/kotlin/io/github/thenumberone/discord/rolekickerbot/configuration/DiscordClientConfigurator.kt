@@ -60,7 +60,7 @@ class DiscordClientConfigurator {
 
     @Bean
     fun intents(): IntentSet {
-        return IntentSet.of(Intent.GUILDS, Intent.GUILD_MEMBERS, Intent.GUILD_MESSAGES)
+        return IntentSet.of(Intent.GUILDS, Intent.GUILD_MEMBERS, Intent.GUILD_MESSAGES, Intent.GUILD_MESSAGE_REACTIONS)
     }
 
     @Bean

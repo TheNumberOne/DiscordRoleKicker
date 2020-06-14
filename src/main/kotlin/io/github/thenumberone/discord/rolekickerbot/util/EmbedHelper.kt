@@ -36,7 +36,10 @@ import java.time.Instant
 
 @Component
 class EmbedHelper(val self: SelfBotInfo) {
-    suspend fun withTemplate(builder: EmbedCreateSpec.() -> Unit, title: String? = null): EmbedCreateSpec.() -> Unit {
+    suspend fun withTemplate(
+        title: String? = null,
+        builder: EmbedCreateSpec.() -> Unit = {}
+    ): EmbedCreateSpec.() -> Unit {
         val name = self.getBotName()
         val imgUrl = self.getImgUrl()
         return {
@@ -53,6 +56,6 @@ class EmbedHelper(val self: SelfBotInfo) {
     }
 
     suspend fun send(channel: MessageChannel, title: String? = null, builder: EmbedCreateSpec.() -> Unit) {
-        channel.createEmbed(withTemplate(builder, title)).awaitSingle()
+        channel.createEmbed(withTemplate(title, builder)).awaitSingle()
     }
 }
