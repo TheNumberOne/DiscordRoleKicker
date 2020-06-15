@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/TheNumberOne/DiscordRoleKicker.svg?style=svg)](https://circleci.com/gh/TheNumberOne/DiscordRoleKicker)
 
-Current version: `1.1.1`
+Current version: `1.1.3`
 
 [Add to your server!](https://discord.com/api/oauth2/authorize?client_id=714381728948420610&permissions=3074&scope=bot)
 

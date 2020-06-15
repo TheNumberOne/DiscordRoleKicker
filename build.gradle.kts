@@ -37,7 +37,7 @@ plugins {
 }
 
 group = "io.github.thenumberone"
-version = "1.1.2"
+version = "1.1.3"
 java.sourceCompatibility = JavaVersion.VERSION_11
 java.targetCompatibility = JavaVersion.VERSION_11
 

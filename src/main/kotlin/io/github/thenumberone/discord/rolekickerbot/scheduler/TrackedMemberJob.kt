@@ -26,6 +26,7 @@
 package io.github.thenumberone.discord.rolekickerbot.scheduler
 
 import discord4j.core.GatewayDiscordClient
+import discord4j.rest.http.client.ClientException
 import io.github.thenumberone.discord.rolekickerbot.configuration.getCurrentGateway
 import io.github.thenumberone.discord.rolekickerbot.configuration.injectGateway
 import io.github.thenumberone.discord.rolekickerbot.data.TrackedMemberJob
@@ -119,10 +120,14 @@ class TrackedMemberSchedulerImpl(
         if (member.isBot) {
             logger.info { "Failed to warn bot ${member.id} because they are a bot." }
         } else {
-            injectGateway(gateway) {
-                embedHelper.send(channel, "Warning") {
-                    setDescription(trackedMember.warningMessage)
+            try {
+                injectGateway(gateway) {
+                    embedHelper.send(channel, "Warning") {
+                        setDescription(trackedMember.warningMessage)
+                    }
                 }
+            } catch (e: ClientException) {
+                logger.error(e) { "Failed to warn user ${member.id} with error" }
             }
             logger.info { "Warned user ${trackedMember.memberId}" }
         }
